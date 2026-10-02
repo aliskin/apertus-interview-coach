@@ -1,60 +1,52 @@
-# Hack Apertus — project template
+# AI-Powered Job Interview Coach
 
-Template repository for [Hack Apertus](https://hackapertus.ch/) submissions.
-Every project keeps almost the same layout, so organizers and judges find the
-same things in the same place.
+A project for Hack Apertus, Track 2a — Academia, based on the **FHGR: AI-Powered Job Interview Coach** challenge.
 
-## Select your track
+**Status:** Planning. The project concept, scope, and implementation are still to be defined.
 
-This repository holds one example project per track:
+## Project idea
 
-- `track_1a/`
-- `track_1b/`
-- `track_2a/`
-- `track_2b/`
+TODO: Describe who the coach is for, the problem it addresses, and the proposed approach.
 
-Keep the directory for the track you are competing in **exactly as it is** —
-don't rename it or move its files — and delete the other track directories.
-That directory is your project root. Keep the files and directories as shown
-below.
+## Features
 
-## The structure
+TODO: Define the core features and the scope of the first prototype.
 
-| Path | What it is |
-| --- | --- |
-| `README.md` | The challenge description and submission requirements for your track |
-| `technical_report.md` | The deeper write-up: architecture, evaluation, limitations |
-| `Makefile` | `make run` must spin up your project |
-| `src/` | Your code |
-| `data/` | Datasets — `track_1a`, `track_2a` and `track_2b` only; max. 100 MB |
-| `findings/` | Issue files — `track_1a` only |
-| `docs/` | Diagrams, notes, longer write-ups |
+## Local setup
 
-## Run it
-
-Judges run `make run` from the root of the project, on a clean checkout:
+Create and activate the Conda environment from the repository root:
 
 ```bash
-make run
+conda env create -f environment.yml
+conda activate apertus-interview-coach
 ```
 
-`make run` is expected to run the project using Docker, since that
-is how the judges will run it.
-- If you used other local open-weight models, include instructions for running the project in your technical report.
-- Use the following environment variables:
-```
-LLM_NAME — name and version of the model
-LLM_BASE_URL — endpoint base URL
-LLM_API_KEY — your API key
-```
+If the environment already exists, only run the activation command.
+The environment currently includes Python 3.12 and pip. Project dependencies will be added as the implementation takes shape.
 
-## Getting started
+## Running the project
 
-1. Click **Use this template** to create your own repository.
-2. Delete the other track directories. Don't rename or restructure yours.
-3. Read its `README.md` and fill in `technical_report.md`.
-4. Make `make run` work from the root of the project, on a clean checkout.
+TODO: Add instructions for running the first prototype. The application and Docker setup are not implemented yet.
+
+## Repository structure
+
+| Path | Purpose |
+| --- | --- |
+| `environment.yml` | Conda environment definition |
+| `track_2a/README.md` | Implementation outline |
+| `track_2a/src/` | Application code |
+| `track_2a/data/` | Project data |
+| `track_2a/docs/` | Design notes and diagrams |
+| `track_2a/Makefile` | Application run command (to be implemented) |
+| `track_2a/technical_report.md` | Architecture, evaluation, and limitations |
+
+## Next steps
+
+- Define the target users and interview practice scenario.
+- Choose the scope of the first prototype.
+- Decide how to use Apertus.
+- Define how to evaluate the coach.
 
 ## License
 
-All Hack Apertus projects are open-sourced. Please check our Terms & Conditions for specific licensing details (6. What you build is open source): https://hackapertus.ch/terms-and-conditions
+See [LICENSE](LICENSE).
