@@ -1,7 +1,6 @@
 # Secrets and local config
 .env
 .env.*
-!.env.example
 
 # Model weights and checkpoints — do not commit these
 *.bin
@@ -25,3 +24,6 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Generated experiment outputs
+/data/runs/

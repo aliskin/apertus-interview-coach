@@ -2,7 +2,7 @@
 
 A project for Hack Apertus, Track 2a — Academia, based on the **FHGR: AI-Powered Job Interview Coach** challenge.
 
-**Status:** Planning. The project concept, scope, and implementation are still to be defined.
+**Status:** First experiment. An English interview scenario, an Apertus API client, and a local Ollama judge are available. The full application is still to be defined.
 
 ## Project idea
 
@@ -26,7 +26,7 @@ The environment currently includes Python 3.12 and pip. Project dependencies wil
 
 ## Running the project
 
-TODO: Add instructions for running the first prototype. The application and Docker setup are not implemented yet.
+Start with the [first experiment guide](track_2a/docs/first_experiment.md). It includes a sample mode that works before an Apertus API key is available, plus instructions for generating and evaluating Apertus responses. The full application and Docker setup are not implemented yet.
 
 ## Repository structure
 

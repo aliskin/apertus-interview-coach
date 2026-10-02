@@ -13,23 +13,23 @@ TODO: Define the application components and how they interact.
 
 ## Use of Apertus
 
-TODO: Choose the model, how it will be accessed, and its role in the coach.
+The first experiment calls a configurable OpenAI-compatible Apertus endpoint to generate follow-up questions and coaching feedback. Set the provider's endpoint and model identifier when API access is available.
 
 ## Data
 
-TODO: Identify any data needed, its sources, and how it will be used.
+The first experiment uses four cases derived from the [fictional English scenario](docs/first_interview_scenario_en.md), stored in `data/first_interview_en.json`. Generated responses and evaluation reports are stored locally in `data/runs/`, which is ignored by Git.
 
 ## Running the application
 
-TODO: Implement `make run` and document the required configuration.
+Follow the [first experiment guide](docs/first_experiment.md) to run the Python command-line experiment. It requires no additional Python packages. A full application, Docker setup, and `make run` are still to be implemented.
 
 ## Evaluation
 
-TODO: Define what useful coaching looks like and how to measure it.
+An Ollama model judges each response against a stage-specific rubric and saves scores, explanations, and evidence. The default judge is `qwen3.5:9b`. See the [guide](docs/first_experiment.md#reading-the-evaluation) for interpretation and limitations.
 
 ## Limitations
 
-TODO: Document limitations as the prototype develops.
+The experiment tests follow-ups and feedback independently on four English cases. It does not yet test a complete conversation or the target languages. Judge scores require human review and are not a measure of student ability or employability.
 
 ## Technical report
 
