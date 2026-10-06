@@ -3,6 +3,11 @@
 .env.*
 !.env.example
 
+# Personal documentation stays local
+*.md
+!README.md
+!technical_report.md
+
 # Model weights and checkpoints — do not commit these
 *.bin
 *.safetensors

@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+
+from prompt_profile import load_profile, guidance
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, build_opener, HTTPRedirectHandler
@@ -52,6 +54,21 @@ def ollama(model, messages, schema=None):
     return content
 
 
+def apertus(messages):
+    key, model, base = (os.getenv(name) for name in ('LLM_API_KEY', 'LLM_NAME', 'LLM_BASE_URL'))
+    if not all((key, model, base)):
+        raise ValueError('Set LLM_API_KEY, LLM_NAME, and LLM_BASE_URL.')
+    response = post(base, '/chat/completions', {
+        'model': model, 'messages': messages, 'temperature': 0, 'max_tokens': 600}, key)
+    choice = response['choices'][0]
+    if choice.get('finish_reason') == 'length':
+        raise ValueError('Apertus response was truncated; increase max_tokens.')
+    output = choice['message']['content']
+    if not isinstance(output, str) or not output.strip():
+        raise ValueError('Apertus returned an empty or invalid response.')
+    return output
+
+
 def messages_for(case, context, prompt):
     return [{'role': 'system', 'content': prompt + '\nStudent context: ' + context
              + '\nTask: ' + case['task']}, *case['messages']]
@@ -60,6 +77,7 @@ def messages_for(case, context, prompt):
 def generate(args):
     suite = json.loads((ROOT / 'data/first_interview_en.json').read_text())
     prompt = (ROOT / 'src/prompts/coach.txt').read_text()
+    profile = load_profile(getattr(args, 'profile', None))
     key = os.getenv('LLM_API_KEY')
     model = os.getenv('LLM_NAME')
     base = os.getenv('LLM_BASE_URL')
@@ -67,19 +85,13 @@ def generate(args):
         raise ValueError('Set LLM_API_KEY, LLM_NAME, and LLM_BASE_URL (including the provider API prefix, e.g. /v1).')
     records = []
     for case in suite['cases']:
-        messages = messages_for(case, suite['context'], prompt)
+        messages = messages_for(case, suite['context'], prompt + guidance(profile, 'coach', case['stage']))
         if args.provider == 'sample':
             output = case['sample_output']
         elif args.provider == 'ollama':
             output = ollama(args.model, messages)
         else:
-            response = post(base, '/chat/completions', {
-                'model': model, 'messages': messages, 'temperature': 0,
-                'max_tokens': 600}, key)
-            choice = response['choices'][0]
-            if choice.get('finish_reason') == 'length':
-                raise ValueError('Apertus response was truncated; increase max_tokens.')
-            output = choice['message']['content']
+            output = apertus(messages)
         if not isinstance(output, str) or not output.strip():
             raise ValueError('Model returned an empty or invalid response.')
         records.append({'id': case['id'], 'stage': case['stage'],
@@ -88,11 +100,15 @@ def generate(args):
     return {'version': 1, 'created_at': datetime.now(timezone.utc).isoformat(),
             'provider': args.provider,
             'model': model if args.provider == 'apertus' else args.model if args.provider == 'ollama' else 'handwritten-example',
-            'temperature': 0, 'context': suite['context'], 'coach_prompt': prompt,
+            'temperature': 0, 'context': suite['context'], 'coach_prompt': prompt, 'profile': profile,
             'cases': records}
 
 
 CRITERIA = {
+    'interaction': {
+        'quality': 'Provides clear, evidence-based feedback with one strength and one actionable improvement, then exactly one useful follow-up question.',
+        'relevance': 'Feedback and follow-up respond specifically to the student’s answer and the apprenticeship context; no invented experience or unsupported claims.',
+        'appropriateness': 'Respectful, constructive, accessible to a young first-time applicant; no personality judgments, stereotyping, fabricated achievements, or pressure to memorise a script.'},
     'followup': {
         'adaptation': 'Responds to the actual answer: elicits an example if vague, explores it if specific.',
         'grounding': 'Does not invent student experience or assume professional knowledge.',
@@ -161,12 +177,13 @@ def evaluate(args):
     raw = args.input.read_bytes()
     run = json.loads(raw)
     prompt = (ROOT / 'src/prompts/judge.txt').read_text()
+    profile = load_profile(getattr(args, 'profile', None))
     if not run['cases']:
         raise ValueError('Input contains no cases.')
     results = []
     report = {'version': 2, 'created_at': datetime.now(timezone.utc).isoformat(),
               'input_sha256': hashlib.sha256(raw).hexdigest(), 'judge_model': args.model,
-              'judge_prompt': prompt, 'rubric': CRITERIA, 'temperature': 0, 'seed': 42,
+              'judge_prompt': prompt, 'profile': profile, 'rubric': CRITERIA, 'temperature': 0, 'seed': 42,
               'source_provider': run['provider'], 'source_model': run['model'],
               'status': 'in_progress', 'expected_cases': len(run['cases']),
               'results': results, 'mean_by_stage': {}, 'valid_cases_by_stage': {}}
@@ -182,7 +199,7 @@ def evaluate(args):
         payload = {'context': run['context'], 'task': case['task'],
                    'conversation': [m for m in case['messages'] if m['role'] != 'system'],
                    'candidate_response': case['output'], 'criteria': criteria}
-        messages = [{'role': 'system', 'content': prompt + '\nJSON schema: ' + json.dumps(schema)},
+        messages = [{'role': 'system', 'content': prompt + guidance(profile, 'judge', case['stage']) + '\nJSON schema: ' + json.dumps(schema)},
                     {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)}]
         record = {'id': case['id'], 'stage': case['stage'], 'scores': None,
                   'raw_response': None, 'mean': None, 'status': 'warning', 'warnings': []}
@@ -207,6 +224,17 @@ def evaluate(args):
         else:
             print(f"Judged {case['id']}: {record['mean']:.2f}/5", flush=True)
     report['status'] = 'completed_with_warnings' if any(r['warnings'] for r in results) else 'completed'
+    interactions = [r for r in results if r['stage'] == 'interaction']
+    if interactions:
+        valid = [r for r in interactions if r['status'] == 'ok']
+        mean = sum(r['mean'] for r in valid) / len(valid) if len(valid) == len(interactions) else None
+        report['performance'] = {
+            'benchmark': 'provisional_local_rubric', 'official_benchmark': False,
+            'weight_percent': 50, 'mean_out_of_5': mean,
+            'percent': mean / 5 * 100 if mean is not None else None,
+            'weighted_points_out_of_50': mean / 5 * 50 if mean is not None else None,
+            'valid_cases': len(valid), 'total_cases': len(interactions),
+            'aggregation': 'Equal criterion and case weights; percent = mean / 5 * 100. Requires all interaction cases valid.'}
     save_checkpoint(args.output, report)
     return report
 
@@ -222,6 +250,7 @@ def main():
     judge.add_argument('--model', default=os.getenv('JUDGE_MODEL', 'qwen3.5:9b'))
     for command in (gen, judge):
         command.add_argument('--output', type=Path, required=True)
+        command.add_argument('--profile', type=Path, help='Human-reviewed prompt profile JSON.')
     args = parser.parse_args()
     try:
         if args.output.exists():

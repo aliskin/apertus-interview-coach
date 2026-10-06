@@ -27,3 +27,11 @@ build/
 
 # Generated experiment outputs
 /data/runs/
+
+# Local human reviews and derived prompt profiles
+/data/reviews/
+/data/profiles/
+
+# Local-only human review tools
+/src/review.py
+/src/tests/test_review.py
