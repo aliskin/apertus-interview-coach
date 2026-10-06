@@ -1,51 +1,67 @@
 # AI-Powered Job Interview Coach
 
-A project for Hack Apertus, Track 2a — Academia, based on the **FHGR: AI-Powered Job Interview Coach** challenge.
+An Apertus-based interview practice app for teenagers preparing for their first job or apprenticeship. Built for Hack Apertus, Track 2a — Academia, and the FHGR challenge.
 
-**Status:** First experiment. An English interview scenario, an Apertus API client, and a local Ollama judge are available. The full application is still to be defined.
-
-## Project idea
-
-TODO: Describe who the coach is for, the problem it addresses, and the proposed approach.
+**Status:** Runnable web prototype with three-question practice sessions, adaptive coaching, and a final recap. Benchmark datasets and consumer-hardware validation are still pending.
 
 ## Features
 
-TODO: Define the core features and the scope of the first prototype.
+- English, German, French, and Italian interfaces and coaching instructions.
+- Scenarios for IT, retail, hospitality, and technical apprenticeships, plus a first part-time or summer job.
+- One strength, one improvement, and an adaptive follow-up after each of the first two answers.
+- A neutral answer placeholder and optional guidance matched to the next question.
+- Final feedback, transcript downloads, and responsive desktop/mobile layouts.
+- One model call per candidate answer; credential-free demo mode makes no calls.
 
-## Local setup
+## Quick start
 
-Create and activate the Conda environment from the repository root:
+Install and start Docker Desktop or a compatible Docker engine, then run:
 
-```bash
-conda env create -f environment.yml
-conda activate apertus-interview-coach
+```sh
+cd track_2a
+make web-demo
 ```
 
-If the environment already exists, only run the activation command.
-The environment currently includes Python 3.12 and pip. Project dependencies will be added as the implementation takes shape.
+Open **http://localhost:8080**. Demo mode uses fixed example responses; it does not provide personalised AI coaching. Stop with Ctrl+C.
 
-## Running the project
+For Apertus credentials, local Ollama testing, deployment options, and batch evaluation, see the [implementation README](track_2a/README.md). `make web` runs the configured coach; `make run` is an alias for the web app.
 
-Start with the [first experiment guide](track_2a/docs/first_experiment.md). It includes a sample mode that works before an Apertus API key is available, plus instructions for generating and evaluating Apertus responses. The full application and Docker setup are not implemented yet.
+## Architecture
 
-## Repository structure
+The browser holds the conversation and sends it to a Python standard-library HTTP server. The server validates each request and calls the configured Apertus endpoint or local Ollama server. Docker packages the web server and static interface; model weights are served separately. API credentials stay on the server.
+
+The opening question is prepared per scenario. Answers one and two each trigger a single call for feedback, an adaptive question, and its optional hint. Answer three triggers a final recap. The app does not automatically judge the coach during web sessions.
+
+## Development
+
+Python 3.12 is the supported Docker runtime. No third-party Python packages or frontend build tools are required. For a local environment:
+
+```sh
+conda env create -f environment.yml
+conda activate apertus-interview-coach
+cd track_2a
+make test
+python src/web.py --provider demo
+```
+
+## Assessment and next steps
+
+The challenge scores performance at 50%, consistency at 25%, and innovation at 25%, with runtime practicality as a required gate. The app uses one model call per answer, but the selected Apertus serving configuration still needs measurement against the under-32-GB VRAM requirement. A remote endpoint or development model does not establish compliance.
+
+Next steps are benchmark datasets, human-reviewed multilingual feedback, consistency measurement, and local Apertus runtime validation. Current example cases and judge scores are provisional and do not measure a student's employability.
+
+## Repository
 
 | Path | Purpose |
 | --- | --- |
-| `environment.yml` | Conda environment definition |
-| `track_2a/README.md` | Implementation outline |
-| `track_2a/src/` | Application code |
-| `track_2a/data/` | Project data |
-| `track_2a/docs/` | Design notes and diagrams |
-| `track_2a/Makefile` | Application run command (to be implemented) |
-| `track_2a/technical_report.md` | Architecture, evaluation, and limitations |
+| [track_2a/README.md](track_2a/README.md) | Setup, deployment, and evaluation instructions |
+| `track_2a/src/` | Web server, provider adapters, prompts, and interface |
+| `track_2a/data/` | Example cases and ignored local outputs/configuration |
+| `track_2a/Makefile` | Web launch and test commands |
+| [track_2a/technical_report.md](track_2a/technical_report.md) | Technical report |
+| `environment.yml` | Optional Conda environment |
 
-## Next steps
-
-- Define the target users and interview practice scenario.
-- Choose the scope of the first prototype.
-- Decide how to use Apertus.
-- Define how to evaluate the coach.
+Personal guides and local review/terminal tools are excluded from the published application.
 
 ## License
 
