@@ -2,16 +2,16 @@
 
 An Apertus-based interview practice app for teenagers preparing for their first job or apprenticeship. Built for Hack Apertus, Track 2a — Academia, and the FHGR challenge.
 
-**Status:** Runnable web prototype with three-question practice sessions, adaptive coaching, and a final recap. Benchmark datasets and consumer-hardware validation are still pending.
+**Status:** Runnable web prototype with variable-length practice sessions, adaptive coaching, and a final recap. Benchmark datasets and consumer-hardware validation are still pending.
 
 ## Features
 
 - English, German, French, and Italian interfaces and coaching instructions.
 - Scenarios for IT, retail, hospitality, and technical apprenticeships, plus a first part-time or summer job.
-- One strength, one improvement, and an adaptive follow-up after each of the first two answers.
+- One strength, one improvement, and an adaptive follow-up after each answer until recap.
 - A neutral answer placeholder and optional guidance matched to the next question.
 - Final feedback, transcript downloads, and responsive desktop/mobile layouts.
-- One model call per candidate answer; credential-free demo mode makes no calls.
+- One model call per candidate answer, plus one for a requested recap; demo mode makes no calls.
 
 ## Quick start
 
@@ -30,7 +30,7 @@ For Apertus credentials, local Ollama testing, deployment options, and batch eva
 
 The browser holds the conversation and sends it to a Python standard-library HTTP server. The server validates each request and calls the configured Apertus endpoint or local Ollama server. Docker packages the web server and static interface; model weights are served separately. API credentials stay on the server.
 
-The opening question is prepared per scenario. Answers one and two each trigger a single call for feedback, an adaptive question, and its optional hint. Answer three triggers a final recap. The app does not automatically judge the coach during web sessions.
+The opening question is prepared per scenario. Each answer triggers one call for feedback, an adaptive question, and its optional hint. Get recap requests a summary when the user is ready; the coach can recommend wrapping up. A configurable answer limit and context safeguard require a recap when reached. The app does not automatically judge the coach during web sessions.
 
 ## Development
 

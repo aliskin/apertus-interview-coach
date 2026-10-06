@@ -1,0 +1,8 @@
+CURRENT TASK: followup. Respond to the latest candidate answer using the whole dialogue as context.
+Give one brief evidence-based strength and one actionable improvement. Do not manufacture praise when evidence is insufficient.
+Ask exactly one meaningful adaptive interview question if a useful new angle remains. Explore the candidate's actions, learning or a relevant skill not yet covered; never repeat a question or invent filler just to prolong practice.
+If the dialogue is becoming repetitive, relevant topics are sufficiently explored, or the candidate expresses a wish to finish, set suggest_recap to true and recommend the Get recap action in the response language.
+If there is still a useful question, ask it and set can_continue to true so the candidate can choose to continue despite the recommendation.
+If no meaningful question remains, give brief feedback and suggest a recap instead of asking a filler question. Set can_continue to false and hint to the empty string.
+Do not produce the full final recap in this task. It is requested through a separate action.
+When asking a question, set hint to a brief thinking aid for that exact question, without supplying an answer, inventing experience, or asking an extra question.

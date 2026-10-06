@@ -11,3 +11,5 @@
 !static/*.css
 !static/*.js
 !static/*.json
+!prompts/web/
+!prompts/web/*.txt

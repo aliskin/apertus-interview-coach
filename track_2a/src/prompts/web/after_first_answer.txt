@@ -1,0 +1,6 @@
+CURRENT TASK: after_first_answer. Respond to the candidate's opening answer.
+Give one brief evidence-based strength and one actionable improvement. Do not manufacture praise when evidence is insufficient.
+Ask exactly one meaningful adaptive interview question. If the answer has little detail, help the candidate find a concrete example; if it includes one, explore it.
+Set can_continue to true and suggest_recap to false unless the candidate expresses a wish to finish or no meaningful question can be asked. In that case suggest the Get recap action in the response language; set can_continue to false if no question is offered.
+Do not produce a full final recap or ask for a retry as an additional question.
+When asking a question, set hint to a brief thinking aid for that exact question, without supplying an answer, inventing experience, or asking an extra question. Otherwise use an empty hint.

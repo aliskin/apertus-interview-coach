@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-let transcript = [], config, busy = false, complete = false, language = 'en', scenario = 'it';
+let transcript = [], config, busy = false, complete = false, language = 'en', scenario = 'it', canContinue = true, suggestRecap = false;
 let locales;
 const t = key => locales[language][key];
 function translate() {
@@ -36,14 +36,26 @@ function bubble(role, content) {
   card.append(label, text); $('conversation').append(card);
 }
 function reset() {
-  transcript = [{role: 'assistant', content: config.scenarios[scenario].translations[language].opening}]; complete = false;
+  transcript = [{role: 'assistant', content: config.scenarios[scenario].translations[language].opening}]; complete = false; canContinue = true; suggestRecap = false;
   $('conversation').replaceChildren(); bubble('assistant', transcript[0].content);
   $('answer-form').hidden = false; $('finished').hidden = true; $('answer').value = ''; $('status').textContent = ''; $('answer-help').open = false; $('answer-hint').textContent = t('openingHint'); update();
 }
 function update() {
   const answers = transcript.filter(x => x.role === 'user').length;
-  $('progress').textContent = complete ? t('complete') : t('question').replace('{n}', Math.min(answers + 1, 3));
-  [...$('steps').children].forEach((li, i) => { li.className = i < answers ? 'done' : i === answers ? 'active' : ''; if (i === answers && !complete) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+  $('progress').textContent = complete ? t('complete') : !canContinue ? t('recapReady') : t('question').replace('{n}', answers + 1);
+  const phase = complete ? 2 : answers > 0 ? 1 : 0;
+  [...$('steps').children].forEach((li, i) => {
+    li.className = complete || i < phase ? 'done' : i === phase ? 'active' : '';
+    if (!complete && i === phase) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+  });
+  $('answer-form').hidden = complete || !canContinue;
+  $('recap').hidden = complete;
+  $('recap').disabled = busy || (answers === 0 && !$('answer').value.trim());
+  $('recap').textContent = t($('answer').value.trim() ? 'sendRecap' : 'recap');
+  $('recap-suggestion').hidden = complete || !suggestRecap;
+  $('recap-suggestion').textContent = t(canContinue ? 'recapSuggested' : 'recapReady');
+  $('session-limit').hidden = complete;
+  $('session-limit').textContent = t('sessionLimit').replace('{n}', config.max_answers);
   $('count').textContent = `${$('answer').value.length.toLocaleString(language)} / ${(4000).toLocaleString(language)} · ${t('time')}`;
   $('answer').placeholder = t('placeholder');
   $('send').textContent = t(busy ? 'sending' : 'send');
@@ -53,18 +65,29 @@ function update() {
   $('send').disabled = busy || !$('answer').value.trim(); $('answer').disabled = busy; $('restart').disabled = busy; $('language').disabled = busy; $('scenario').disabled = busy;
 }
 $('answer').addEventListener('input', update);
-$('answer-form').addEventListener('submit', async event => {
-  event.preventDefault(); if (busy || !$('answer').value.trim()) return;
-  const answer = $('answer').value.trim(); const pending = [...transcript, {role: 'user', content: answer}];
-  busy = true; $('status').textContent = t('thinking'); update();
+async function submitToCoach(recap = false) {
+  if (busy || complete) return;
+  const answer = $('answer').value.trim();
+  if ((!recap && !answer) || (recap && !answer && !transcript.some(item => item.role === 'user'))) return;
+  const pending = answer ? [...transcript, {role: 'user', content: answer}] : [...transcript];
+  busy = true; $('status').textContent = t(recap ? 'recapping' : 'thinking'); update();
   try {
-    const response = await fetch('/api/answer', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({transcript: pending, language, scenario})});
+    const response = await fetch(recap ? '/api/recap' : '/api/answer', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({transcript: pending, language, scenario})});
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
-    transcript = [...pending, {role: 'assistant', content: data.reply}]; bubble('user', answer); bubble('assistant', data.reply);
-    $('answer').value = ''; $('answer-hint').textContent = data.hint || t('genericHint'); complete = data.complete; $('answer-form').hidden = complete; $('finished').hidden = !complete; $('status').textContent = '';
+    transcript = [...pending, {role: 'assistant', content: data.reply}]; if (answer) bubble('user', answer); bubble('assistant', data.reply);
+    $('answer').value = ''; $('answer-hint').textContent = data.hint || t('genericHint');
+    complete = data.complete; canContinue = data.can_continue; suggestRecap = data.suggest_recap;
+    $('finished').hidden = !complete; $('status').textContent = '';
   } catch (error) { $('status').textContent = t('error'); }
-  finally { busy = false; update(); if (!complete) $('answer').focus({preventScroll: true}); if (!$('status').textContent) $('conversation').lastElementChild.scrollIntoView({block: 'start', behavior: 'instant'}); }
-});
+  finally {
+    busy = false; update();
+    if (!complete && canContinue) $('answer').focus({preventScroll: true});
+    else if (!complete) $('recap').focus({preventScroll: true});
+    if (!$('status').textContent) $('conversation').lastElementChild.scrollIntoView({block: 'start', behavior: 'instant'});
+  }
+}
+$('answer-form').addEventListener('submit', event => { event.preventDefault(); submitToCoach(false); });
+$('recap').addEventListener('click', () => submitToCoach(true));
 $('restart').addEventListener('click', () => { if ((transcript.length > 1 || $('answer').value.trim()) && !confirm(t('restartConfirm'))) return; reset(); $('answer').focus(); });
 $('download').addEventListener('click', () => {
   const text = `${t('export')} (${config.provider}, ${language}, ${config.scenarios[scenario].translations[language].label})\n\n` + transcript.map(x => `${x.role === 'user' ? t('you') : t('coach')}:\n${x.content}`).join('\n\n');

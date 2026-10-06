@@ -1,0 +1,6 @@
+Return only a JSON object with exactly these fields:
+- "reply": string containing feedback and a next question, a recommendation to wrap up, or the final recap, as required by CURRENT TASK.
+- "hint": string with a thinking aid for the next question, or empty when no question is offered.
+- "suggest_recap": boolean recommending the user select Get recap. A recommendation does not itself complete the session.
+- "can_continue": boolean indicating whether reply contains a meaningful next interview question.
+Write text fields in the selected response language. Do not include Markdown fences or text outside the JSON object.

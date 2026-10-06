@@ -76,13 +76,35 @@ flowchart LR
 
 | Stage | Behaviour | Model calls |
 | --- | --- | --- |
-| Select language/scenario | Display a translated, prepared opening and optional motivation hint | 0 |
-| First answer | Strength, improvement, adaptive question, and a matching hint | 1 |
-| Second answer | Feedback and another adaptive question using the conversation so far | 1 |
-| Third answer | Personalised recap and a next practice step | 1 |
-| Download/restart | Export text locally or clear the conversation | 0 |
+| Select language/scenario | Prepared opening and optional motivation hint | 0 |
+| Submit an answer | Feedback, one useful adaptive question, and its hint | 1 |
+| Coach recommends wrapping up | Recommendation returned with the same answer response; user can continue if a meaningful question remains | 0 additional |
+| Get recap | Recap of all submitted answers; a typed draft is included as the final answer | 1 |
+| Answer/context safeguard reached | Produce the recap in the current answer call | 0 additional |
+| Download/restart | Export text or clear the conversation | 0 |
 
-The coach is asked to accept school, hobby, and home examples, avoid fabricated achievements, and avoid personality or employability judgments. Response JSON contains `reply` and `hint`; missing hints or plain-text replies receive neutral fallback guidance without another model call. Demo follow-ups and hints are fixed examples across scenarios. Changing language or scenario restarts practice, with confirmation if answers or a draft exist.
+Practice is no longer limited to three answers. Use Get recap whenever you are ready. If no meaningful follow-up remains, the coach can set `can_continue=false` and recommend a recap instead of asking filler questions. A recommendation alone does not complete the session; the recap action does.
+
+The default answer safeguard is 12, configurable with `make web MAX_ANSWERS=20` or `--max-answers 20` for direct Python (allowed range: 2–50). The server requests a recap when the submitted conversation reaches 16,000 characters, reserving space for an intervening reply and another answer. Histories above 24,000 characters are rejected without a model call; history is not silently truncated. These character limits bound growth but are not a measured token/VRAM guarantee.
+
+
+The coach is asked to accept school, hobby, and home examples, avoid fabricated achievements, and avoid personality or employability judgments. Response JSON contains `reply`, `hint`, `suggest_recap` and `can_continue`; missing hints or plain-text replies receive neutral fallback guidance without another model call. Demo follow-ups and hints are fixed examples across scenarios; after its example bank is exhausted it recommends a recap. Changing language or scenario restarts practice, with confirmation if answers or a draft exist.
+
+## Model prompt organisation
+
+Web coaching prompt files live in `src/prompts/web/`:
+
+| File | Use |
+| --- | --- |
+| `shared.txt` | Role, supportive tone, evidence grounding, and safety rules for every call |
+| `output.txt` | The reply, hint and wrap-up decision JSON contract for every call |
+| `after_first_answer.txt` | Feedback on the opening answer, one adaptive question, and its hint |
+| `followup.txt` | Feedback and adaptive questions after any subsequent answer; optional wrap-up recommendation |
+| `final_recap.txt` | User-requested or safeguard-triggered recap; no question and an empty hint |
+
+`build_messages()` in `src/web.py` selects the task from the validated answer count, explicit recap action, answer limit and context safeguard. It assembles shared rules, optional `coach.interaction` profile guidance, scenario context from `src/static/scenarios.json`, the selected language, the output contract, and only the current stage instructions into one system message. The conversation follows as assistant/user messages. Stage instructions are placed last to make the current task explicit.
+
+All coaching and recap calls use the same configured Apertus or Ollama model; there is no planner or judge call within the coaching session. Demo mode bypasses prompt construction and uses fixed responses. `src/prompts/coach.txt` and `judge.txt` remain separate batch-experiment prompts. Prompt files are loaded when the server starts; rebuild/restart Docker after changing them.
 
 ## Data and privacy
 
@@ -110,6 +132,6 @@ Ollama must have the judge model installed; the default is `qwen3.5:9b`. Output 
 
 ## Practicality and limitations
 
-The web app uses three model calls per completed session and adds no model weights or GPU requirement. The selected Apertus model, quantisation, context length, and serving configuration still require verification against the under-32-GB VRAM gate. Interface translations do not establish multilingual coaching quality; model responses, feedback usefulness, learning gains, and consistency require further evaluation.
+The web app uses one model call per answer plus one when the user explicitly requests a recap (at most two calls per answer on average for a completed session without retries) and adds no model weights or GPU requirement. The selected Apertus model, quantisation, context length, and serving configuration still require verification against the under-32-GB VRAM gate. Interface translations do not establish multilingual coaching quality; model responses, feedback usefulness, learning gains, and consistency require further evaluation.
 
 See [technical_report.md](technical_report.md) for the technical report.

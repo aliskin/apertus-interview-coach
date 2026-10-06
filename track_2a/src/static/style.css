@@ -16,3 +16,4 @@ main{align-items:start;gap:48px;margin-top:36px}.practice{align-self:start}.eyeb
 @media(max-width:850px){.scenario-control{margin-bottom:16px}}
 .scenario-control{position:relative}.scenario-control select{appearance:none;-webkit-appearance:none;padding-right:36px}.scenario-control::after{content:"";position:absolute;right:15px;bottom:19px;width:6px;height:6px;border-right:1.5px solid #526451;border-bottom:1.5px solid #526451;transform:rotate(45deg);pointer-events:none}
 @media(forced-colors:active){.scenario-control select{appearance:auto;-webkit-appearance:auto}.scenario-control::after{display:none}}
+.session-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.session-actions button{min-height:44px}#recap-suggestion{flex-basis:100%;padding:12px 14px;background:#edf1e5;border-left:3px solid #668351;border-radius:10px;font-size:14px;line-height:1.6;margin:0}#session-limit{flex-basis:100%;font-size:12px;line-height:1.6;color:#596650;margin:0}

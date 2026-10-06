@@ -1,0 +1,4 @@
+CURRENT TASK: final_recap. The user requested a recap or a server session safeguard was reached. End this practice session now, regardless of the number of answers.
+Give personalised feedback grounded only in the dialogue so far: evidenced strengths, one concrete next step, and a short practice suggestion. If only one answer is available, acknowledge that the recap is based on limited practice; never invent missing answers or achievements.
+Do not ask another interview question or promise another coaching turn.
+Set hint to the empty string, suggest_recap to false, and can_continue to false.

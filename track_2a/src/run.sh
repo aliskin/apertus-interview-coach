@@ -53,6 +53,6 @@ export OLLAMA_BASE_URL="${DOCKER_OLLAMA_BASE_URL:-http://host.docker.internal:11
 docker run --rm --add-host host.docker.internal:host-gateway \
     -p "127.0.0.1:${WEB_PORT:-8080}:8080" \
     --user "$(id -u):$(id -g)" \
-    -e LLM_API_KEY -e LLM_BASE_URL -e LLM_NAME -e OLLAMA_BASE_URL \
+    -e LLM_API_KEY -e LLM_BASE_URL -e LLM_NAME -e OLLAMA_BASE_URL -e MAX_ANSWERS \
     -v "$PWD/data/profiles:/app/track_2a/data/profiles:ro" \
     apertus-interview-coach "$@"
