@@ -1,0 +1,112 @@
+{
+  "it": {
+    "context": "IT apprenticeship",
+    "guidance": "Explore curiosity, problem-solving and learning; do not test advanced technical knowledge.",
+    "translations": {
+      "en": {
+        "label": "IT apprenticeship",
+        "opening": "What interests you about this IT apprenticeship?"
+      },
+      "de": {
+        "label": "Informatiklehre",
+        "opening": "Was interessiert dich an dieser Informatiklehre?"
+      },
+      "fr": {
+        "label": "Informatique (apprentissage)",
+        "opening": "Qu’est-ce qui t’intéresse dans cet apprentissage en informatique ?"
+      },
+      "it": {
+        "label": "Apprendistato in informatica",
+        "opening": "Che cosa ti interessa di questo apprendistato in informatica?"
+      }
+    }
+  },
+  "retail": {
+    "context": "retail apprenticeship",
+    "guidance": "Explore helping customers, teamwork and handling everyday situations; no assumed sales experience.",
+    "translations": {
+      "en": {
+        "label": "Retail apprenticeship",
+        "opening": "What interests you about an apprenticeship in retail?"
+      },
+      "de": {
+        "label": "Detailhandelslehre",
+        "opening": "Was interessiert dich an einer Lehre im Detailhandel?"
+      },
+      "fr": {
+        "label": "Vente (apprentissage)",
+        "opening": "Qu’est-ce qui t’intéresse dans un apprentissage dans la vente ?"
+      },
+      "it": {
+        "label": "Apprendistato nella vendita",
+        "opening": "Che cosa ti interessa di un apprendistato nella vendita?"
+      }
+    }
+  },
+  "hospitality": {
+    "context": "hospitality apprenticeship",
+    "guidance": "Explore teamwork, care for guests and learning practical tasks; do not assume professional kitchen experience.",
+    "translations": {
+      "en": {
+        "label": "Hospitality apprenticeship",
+        "opening": "What interests you about working in hospitality?"
+      },
+      "de": {
+        "label": "Lehre in der Gastronomie",
+        "opening": "Was interessiert dich an einer Lehre in der Gastronomie?"
+      },
+      "fr": {
+        "label": "Restauration (apprentissage)",
+        "opening": "Qu’est-ce qui t’intéresse dans un apprentissage en restauration ?"
+      },
+      "it": {
+        "label": "Apprendistato nella ristorazione",
+        "opening": "Che cosa ti interessa di un apprendistato nella ristorazione?"
+      }
+    }
+  },
+  "technical": {
+    "context": "technical apprenticeship",
+    "guidance": "Explore practical projects, careful work and learning how things work; avoid advanced trade knowledge.",
+    "translations": {
+      "en": {
+        "label": "Technical apprenticeship",
+        "opening": "What interests you about a technical apprenticeship?"
+      },
+      "de": {
+        "label": "Technische Lehre",
+        "opening": "Was interessiert dich an einer technischen Lehre?"
+      },
+      "fr": {
+        "label": "Technique (apprentissage)",
+        "opening": "Qu’est-ce qui t’intéresse dans un apprentissage technique ?"
+      },
+      "it": {
+        "label": "Apprendistato tecnico",
+        "opening": "Che cosa ti interessa di un apprendistato tecnico?"
+      }
+    }
+  },
+  "first-job": {
+    "context": "first part-time or summer job",
+    "guidance": "Explore motivation, reliability and asking for help. No professional experience required.",
+    "translations": {
+      "en": {
+        "label": "First job / summer job",
+        "opening": "What are you hoping to learn in your first job?"
+      },
+      "de": {
+        "label": "Neben- oder Ferienjob",
+        "opening": "Was möchtest du bei deinem ersten Job lernen?"
+      },
+      "fr": {
+        "label": "Premier job / job d’été",
+        "opening": "Qu’aimerais-tu apprendre dans ton premier job ?"
+      },
+      "it": {
+        "label": "Primo lavoro / lavoro estivo",
+        "opening": "Che cosa speri di imparare nel tuo primo lavoro?"
+      }
+    }
+  }
+}
