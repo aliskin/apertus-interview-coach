@@ -1,6 +1,17 @@
-.PHONY: run
+COACH_PROVIDER ?= apertus
+COACH_MODEL ?= llama3:8b
+PROFILE ?=
+export COACH_PROVIDER COACH_MODEL PROFILE
 
-# Replace with the command that starts the project in a Docker container,
-# e.g. `docker compose up`. It must work from a clean checkout.
-run:
-	@echo "make run is not implemented yet — edit this Makefile"; exit 1
+.PHONY: run web web-demo test
+
+run: web
+
+web:
+	@sh src/run.sh
+
+web-demo:
+	@COACH_PROVIDER=demo sh src/run.sh
+
+test:
+	python -m unittest discover -s src/tests -v

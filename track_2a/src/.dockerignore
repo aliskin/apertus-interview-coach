@@ -1,0 +1,13 @@
+*
+!Dockerfile
+!experiment.py
+!prompt_profile.py
+!web.py
+!prompts/
+!prompts/coach.txt
+!prompts/judge.txt
+!static/
+!static/*.html
+!static/*.css
+!static/*.js
+!static/*.json
