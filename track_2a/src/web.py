@@ -4,7 +4,8 @@ import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-import experiment
+import model_client as experiment
+import interview_context
 
 STATIC = Path(__file__).parent / 'static'
 LOCALES = json.loads((STATIC / 'locales.json').read_text(encoding='utf-8'))
@@ -20,6 +21,17 @@ DEFAULT_MAX_ANSWERS = 12
 MAX_CONTEXT_CHARS = 24000
 RECAP_CONTEXT_THRESHOLD = 16000
 MAX_MESSAGE_CHARS = 4000
+COACH_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'reply': {'type': 'string', 'minLength': 1, 'maxLength': MAX_MESSAGE_CHARS},
+        'hint': {'type': 'string', 'maxLength': 600},
+        'suggest_recap': {'type': 'boolean'},
+        'can_continue': {'type': 'boolean'},
+    },
+    'required': ['reply', 'hint', 'suggest_recap', 'can_continue'],
+    'additionalProperties': False,
+}
 STAGE_PROMPTS = {stage: (PROMPT_DIR / f'{stage}.txt').read_text(encoding='utf-8').strip()
                  for stage in STAGES}
 
@@ -33,7 +45,7 @@ def session_stage(transcript, recap=False, max_answers=DEFAULT_MAX_ANSWERS):
     return 'after_first_answer' if count == 1 else 'followup'
 
 
-def build_messages(transcript, profile, language, scenario, recap=False, max_answers=DEFAULT_MAX_ANSWERS):
+def build_messages(transcript, profile, language, scenario, recap=False, max_answers=DEFAULT_MAX_ANSWERS, question_context=None):
     """Select the task from the explicit action and server runtime safeguards."""
     stage = session_stage(transcript, recap, max_answers)
     count = sum(item['role'] == 'user' for item in transcript)
@@ -45,11 +57,13 @@ def build_messages(transcript, profile, language, scenario, recap=False, max_ans
              f'Session state: {count} candidate answers so far; maximum {max_answers}. '
              + ('The user requested a recap.' if recap else 'The user submitted another answer.')
              + (' A session safeguard requires a recap now.' if stage == 'final_recap' and not recap else ''),
+             interview_context.context_prompt({'interview_stage': 'feedback', 'question_subtype': 'session_recap'}
+                                              if stage == 'final_recap' else question_context),
              OUTPUT_PROMPT, STAGE_PROMPTS[stage]]
     return [{'role': 'system', 'content': '\n\n'.join(part for part in parts if part)}, *transcript]
 
 
-def respond(transcript, provider, model, profile, language='en', scenario='it', recap=False, max_answers=DEFAULT_MAX_ANSWERS):
+def respond(transcript, provider, model, profile, language='en', scenario='it', recap=False, max_answers=DEFAULT_MAX_ANSWERS, question_context=None):
     count = sum(item['role'] == 'user' for item in transcript)
     stage = session_stage(transcript, recap, max_answers)
     if provider == 'demo':
@@ -64,23 +78,27 @@ def respond(transcript, provider, model, profile, language='en', scenario='it', 
         else:
             packet = {'reply': LOCALES[language]['demoWrap'], 'hint': '', 'suggest_recap': True, 'can_continue': False}
         return json.dumps(packet, ensure_ascii=False)
-    messages = build_messages(transcript, profile, language, scenario, recap, max_answers)
-    return experiment.apertus(messages) if provider == 'apertus' else experiment.ollama(model, messages)
+    messages = build_messages(transcript, profile, language, scenario, recap, max_answers, question_context)
+    return (experiment.apertus(messages, COACH_SCHEMA) if provider == 'apertus'
+            else experiment.ollama(model, messages, COACH_SCHEMA))
 
 
-def coaching_fields(output, language, complete):
+def coaching_fields(output, language, complete, strict=False):
     """Validate same-call wrap-up guidance without adding repair calls."""
     fallback = LOCALES[language]['genericHint']
     content = output.strip()
-    if content.startswith('```') and content.endswith('```'):
+    if not strict and content.startswith('```') and content.endswith('```'):
         content = content.split('\n', 1)[-1].rsplit('```', 1)[0].strip()
     try:
         packet = json.loads(content)
     except json.JSONDecodeError:
-        if content.startswith('{'):
+        if strict or content.startswith('{'):
             raise ValueError('Invalid coach response. Please try again.') from None
         packet = {'reply': output}
     if not isinstance(packet, dict) or not isinstance(packet.get('reply'), str) or not packet['reply'].strip() or len(packet['reply']) > MAX_MESSAGE_CHARS:
+        raise ValueError('Invalid coach response. Please try again.')
+    if strict and (set(packet) != set(COACH_SCHEMA['required'])
+                   or not isinstance(packet.get('hint'), str) or len(packet['hint']) > 600):
         raise ValueError('Invalid coach response. Please try again.')
     suggest = packet.get('suggest_recap', False)
     can_continue = packet.get('can_continue', True)
@@ -155,7 +173,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError('Conversation exceeds the context limit. Start a new practice session.')
             stage = session_stage(transcript, recap, max_answers)
             output = respond(transcript, self.server.provider, self.server.model, self.server.profile, language, scenario, recap, max_answers)
-            self.send(200, coaching_fields(output, language, stage == 'final_recap'))
+            self.send(200, coaching_fields(output, language, stage == 'final_recap', strict=True))
         except (ValueError, KeyError, TypeError) as exc:
             self.send(400, {'error': str(exc)})
         except (RuntimeError, OSError):

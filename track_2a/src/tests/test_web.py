@@ -191,7 +191,8 @@ class WebTests(unittest.TestCase):
                         transcript = dialogue(count)
                         web.respond(transcript, provider, 'test-model', profile, 'de', 'technical', recap)
                         model.assert_called_once()
-                        messages = model.call_args.args[-1]
+                        messages = model.call_args.args[0 if provider == 'apertus' else 1]
+                        self.assertEqual(model.call_args.args[-1], web.COACH_SCHEMA)
                         self.assertEqual(messages[1:], transcript)
                         prompt = messages[0]['content']
                         stage = 'final_recap' if recap else 'after_first_answer' if count == 1 else 'followup'
@@ -202,6 +203,17 @@ class WebTests(unittest.TestCase):
                         self.assertIn('Use one practical next step.', prompt)
                         self.assertIn(web.SCENARIOS['technical']['guidance'], prompt)
                         self.assertIn(web.LANGUAGES['de'], prompt)
+
+    def test_strict_output_rejects_missing_fields_and_bad_types(self):
+        self.assertEqual(web.coaching_fields(OUTPUT, 'de', False, strict=True)['can_continue'], True)
+        for output in ('plain text', '```json\n' + OUTPUT + '\n```', '{broken',
+                       '{"reply":"Hi"}', OUTPUT.replace('"can_continue": true', '"can_continue": 1')):
+            with self.subTest(output=output), self.assertRaises(ValueError):
+                web.coaching_fields(output, 'de', False, strict=True)
+        packet = json.loads(OUTPUT)
+        for change in ({'unexpected': True}, {'hint': 1}, {'hint': 'x' * 601}):
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                web.coaching_fields(json.dumps({**packet, **change}), 'de', False, strict=True)
 
 
 if __name__ == '__main__':
