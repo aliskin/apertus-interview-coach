@@ -4,9 +4,9 @@ A deeper write-up than the README: what you built, how it works, and what the
 numbers say. Also check the specific submission requirements for your Academia
 challenge and add required information here.
 
-- **Track:** `Track 2A — challenge name`
+- **Track:** `Track 2A — FHGR`
 - **Event:** Online
-- **Team:** `team name` — `member`, `member`, `member`
+- **Team:** `Next Question` — `Alisa Smirnova`
 - **Demo:** `link to video, deployment, or notebook`
 
 ## 1. Summary
@@ -20,8 +20,8 @@ reference them here.
 
 ## 3. Use of Apertus
 
-- **Model:** `e.g. swiss-ai/Apertus-v1.5-8B`
-- **How it is used:** inference | fine-tuning | evaluation | red-teaming | agents / tool use
+- **Model:** `swiss-ai/Apertus-v1.5-8B`
+- **How it is used:** inference
 - **Where it runs:** `local weights, hosted endpoint, ...`
 
 Prompts, adapters, quantisation, serving stack — whatever a reader needs to
