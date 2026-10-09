@@ -4,7 +4,7 @@ MAX_ANSWERS ?= 12
 PROFILE ?=
 export COACH_PROVIDER COACH_MODEL PROFILE MAX_ANSWERS
 
-.PHONY: run web web-demo test
+.PHONY: run web web-demo review test
 
 run: web
 
@@ -13,6 +13,9 @@ web:
 
 web-demo:
 	@COACH_PROVIDER=demo sh src/run.sh
+
+review:
+	python3 src/experiments/manual_review.py
 
 test:
 	python -m unittest discover -s src/tests -v

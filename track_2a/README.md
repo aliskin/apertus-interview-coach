@@ -72,7 +72,7 @@ flowchart LR
     Server --> Browser
 ```
 
-`src/web.py` serves the static interface and validates language, scenario, transcript roles, and message lengths. `src/experiment.py` contains the provider adapters and separate batch evaluation workflow. The image contains neither the local review tool nor the terminal app.
+`src/web.py` serves the static interface and validates language, scenario, transcript roles, and message lengths. `src/model_client.py` contains the shared provider adapters. Experiment and review tools live locally in the Git-ignored `src/experiments/` directory. The image contains neither the local review tool nor the terminal app.
 
 | Stage | Behaviour | Model calls |
 | --- | --- | --- |
@@ -124,8 +124,8 @@ The batch experiment uses four authored English example cases in `data/first_int
 
 ```sh
 mkdir -p data/runs
-python src/experiment.py generate --provider sample --output data/runs/sample.json
-python src/experiment.py evaluate --input data/runs/sample.json --output data/runs/sample_judged.json
+python src/experiments/experiment.py generate --provider sample --output data/runs/sample.json
+python src/experiments/experiment.py evaluate --input data/runs/sample.json --output data/runs/sample_judged.json
 ```
 
 Ollama must have the judge model installed; the default is `qwen3.5:9b`. Output paths must be new. Judge reports include scores, explanations, and evidence. Invalid judgments are saved for review and excluded from averages. Judging remains separate from browser practice and does not score candidate ability.

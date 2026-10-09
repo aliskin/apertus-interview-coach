@@ -30,3 +30,15 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Local experiments and generated evaluation artifacts
+/track_2a/src/experiments/
+/track_2a/data/runs/
+/track_2a/data/manual_review/
+# Evaluation fixtures stay local; public coaching guidance remains versionable
+/track_2a/data/evaluation/*
+!/track_2a/data/evaluation/README.md
+!/track_2a/data/evaluation/references/
+/track_2a/data/evaluation/references/*
+!/track_2a/data/evaluation/references/criteria.json
+!/track_2a/data/evaluation/references/feedback_guidelines.json
