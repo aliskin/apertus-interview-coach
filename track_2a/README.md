@@ -52,7 +52,7 @@ make web COACH_PROVIDER=ollama COACH_MODEL=llama3:8b
 
 The container reaches host Ollama through `host.docker.internal:11434`. Set `DOCKER_OLLAMA_BASE_URL` to override it. This development model is not the final Apertus submission.
 
-A reviewed prompt profile can be supplied with `PROFILE=data/profiles/name.json`. Profiles are local JSON files; the application uses the small `prompt_profile.py` loader, without depending on the local human-review tool.
+The legacy stateless API accepts a reviewed prompt profile supplied with `PROFILE=data/profiles/name.json`. Profiles are local JSON files and do not override the new session controller prompts; the application uses the small `prompt_profile.py` loader, without depending on the local human-review tool.
 
 Without Docker, use Python 3.12 and run:
 
@@ -66,72 +66,58 @@ For direct Apertus use, export the provider variables in your shell first, then 
 
 ```mermaid
 flowchart LR
-    Browser[Browser: conversation and controls] --> Server[Python HTTP server in Docker]
-    Server --> Provider[Apertus endpoint or local Ollama]
-    Provider --> Server
-    Server --> Browser
+    UI[Web interface] --> API[Python session API]
+    API --> Controller[Interview controller]
+    Bank[Public question bank and posting] --> Controller
+    Controller --> Model[Apertus: transition / optional follow-up]
+    Model --> Controller
+    Controller --> Feedback[Apertus: final evidenced feedback]
+    Controller --> Store[Local session JSON]
+    Controller --> UI
 ```
 
-`src/web.py` serves the static interface and validates language, scenario, transcript roles, and message lengths. `src/model_client.py` contains the shared provider adapters. Experiment and review tools live locally in the Git-ignored `src/experiments/` directory. The image contains neither the local review tool nor the terminal app.
+The server chooses a bank-question plan and owns stage, subtype, topic coverage and counters. Each answer triggers one interview request; code validates the response and either permits one follow-up or advances the plan. Finishing the plan or requesting recap triggers a separate whole-session feedback request. The same configured model handles both tasks; no judge is part of the live interview.
 
-| Stage | Behaviour | Model calls |
-| --- | --- | --- |
-| Select language/scenario | Prepared opening and optional motivation hint | 0 |
-| Submit an answer | Feedback, one useful adaptive question, and its hint | 1 |
-| Coach recommends wrapping up | Recommendation returned with the same answer response; user can continue if a meaningful question remains | 0 additional |
-| Get recap | Recap of all submitted answers; a typed draft is included as the final answer | 1 |
-| Answer/context safeguard reached | Produce the recap in the current answer call | 0 additional |
-| Download/restart | Export text or clear the conversation | 0 |
-
-Practice is no longer limited to three answers. Use Get recap whenever you are ready. If no meaningful follow-up remains, the coach can set `can_continue=false` and recommend a recap instead of asking filler questions. A recommendation alone does not complete the session; the recap action does.
-
-The default answer safeguard is 12, configurable with `make web MAX_ANSWERS=20` or `--max-answers 20` for direct Python (allowed range: 2–50). The server requests a recap when the submitted conversation reaches 16,000 characters, reserving space for an intervening reply and another answer. Histories above 24,000 characters are rejected without a model call; history is not silently truncated. These character limits bound growth but are not a measured token/VRAM guarantee.
-
-
-The coach is asked to accept school, hobby, and home examples, avoid fabricated achievements, and avoid personality or employability judgments. Response JSON contains `reply`, `hint`, `suggest_recap` and `can_continue`; missing hints or plain-text replies receive neutral fallback guidance without another model call. Demo follow-ups and hints are fixed examples across scenarios; after its example bank is exhausted it recommends a recap. Changing language or scenario restarts practice, with confirmation if answers or a draft exist.
-
-## Model prompt organisation
-
-Web coaching prompt files live in `src/prompts/web/`:
-
-| File | Use |
-| --- | --- |
-| `shared.txt` | Role, supportive tone, evidence grounding, and safety rules for every call |
-| `output.txt` | The reply, hint and wrap-up decision JSON contract for every call |
-| `after_first_answer.txt` | Feedback on the opening answer, one adaptive question, and its hint |
-| `followup.txt` | Feedback and adaptive questions after any subsequent answer; optional wrap-up recommendation |
-| `final_recap.txt` | User-requested or safeguard-triggered recap; no question and an empty hint |
-
-`build_messages()` in `src/web.py` selects the task from the validated answer count, explicit recap action, answer limit and context safeguard. It assembles shared rules, optional `coach.interaction` profile guidance, scenario context from `src/static/scenarios.json`, the selected language, the output contract, and only the current stage instructions into one system message. The conversation follows as assistant/user messages. Stage instructions are placed last to make the current task explicit.
-
-All coaching and recap calls use the same configured Apertus or Ollama model; there is no planner or judge call within the coaching session. Demo mode bypasses prompt construction and uses fixed responses. `src/prompts/coach.txt` and `judge.txt` remain separate batch-experiment prompts. Prompt files are loaded when the server starts; rebuild/restart Docker after changing them.
+Current prompts are the German, French and Italian `src/prompts/session/interviewer.<language>.txt` and `feedback.<language>.txt`; English retains `interviewer.txt` and `feedback.txt`. `guidance.<language>.json` supplies translated rubric/feedback rules, while `instructions.json` localises controller reminders and corrections. The controller supplies public company facts, question metadata, state and actual dialogue. Final feedback also receives the public eleven-criterion rubric and feedback guidelines. Simulator personas, reference annotations and scenario success criteria are excluded from coach input. Older `prompts/web/` are retained only for the legacy stateless API.
 
 ## Data and privacy
 
-The web conversation lives in tab memory and is lost on refresh or restart unless downloaded. The server does not save web transcripts to disk. Answers are sent to the configured model provider, whose retention policy applies. Avoid personal details. There is no login, session database, or shareable conversation link.
+Server-owned sessions, transcripts and request traces are persisted locally in ignored `data/sessions/`. The browser currently starts a fresh session on refresh; persisted sessions are not a login or share-link feature. Clear local session files when no longer needed. Answers are sent to the configured model provider. API keys remain server-side and model text is rendered as text, not HTML.
 
-The bundled server is intended for local use; authenticated public hosting would require additional deployment work. API keys remain server-side, and model output is displayed as text rather than HTML.
+The bundled server is intended for local use. Public authenticated hosting needs additional deployment work. Public runtime resources are in `data/interview/`; experimental tools and generated runs remain Git-ignored.
 
-## Tests and batch evaluation
+## Tests and development results
 
-Run tests in a Python environment:
+From this directory, run:
 
 ```sh
 make test
 ```
 
-The batch experiment uses four authored English example cases in `data/first_interview_en.json`, not an official benchmark. To generate sample responses and evaluate the coach with a host Ollama judge:
+All 30 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
 
-```sh
-mkdir -p data/runs
-python src/experiments/experiment.py generate --provider sample --output data/runs/sample.json
-python src/experiments/experiment.py evaluate --input data/runs/sample.json --output data/runs/sample_judged.json
-```
+The latest local development run completed all 28 organiser scenarios with a separate Apertus candidate simulator. It recorded 417 candidate answers and 471 coach calls, including corrections and final feedback: 1.13 calls per answer. Whole-session assistant reviews are drafts awaiting user validation. Language consistency improved, while grounding, candidate-question handling and follow-up selection remain weak. See [technical_report.md](technical_report.md) for details.
 
-Ollama must have the judge model installed; the default is `qwen3.5:9b`. Output paths must be new. Judge reports include scores, explanations, and evidence. Invalid judgments are saved for review and excluded from averages. Judging remains separate from browser practice and does not score candidate ability.
+Simulation/evaluation tools, generated runs and manual-review data are deliberately Git-ignored. A fresh clone includes the application, public runtime resources and application tests, but not those local experiments. Commands for private experiment scripts are therefore not part of the submission deployment instructions.
 
-## Practicality and limitations
+## Session behaviour and limits
 
-The web app uses one model call per answer plus one when the user explicitly requests a recap (at most two calls per answer on average for a completed session without retries) and adds no model weights or GPU requirement. The selected Apertus model, quantisation, context length, and serving configuration still require verification against the under-32-GB VRAM gate. Interface translations do not establish multilingual coaching quality; model responses, feedback usefulness, learning gains, and consistency require further evaluation.
+Browser sessions start through `/api/session/start`. Clients send a session ID, revision and answer to `/api/answer` or `/api/recap`. Code stores the question plan, current stage/subtype, covered topics, main-question/follow-up counts, transcript and request traces. It updates stage context as the interview progresses.
 
-See [technical_report.md](technical_report.md) for the technical report.
+The browser plan has thirteen main questions, including interview closing, followed by feedback across all eleven FHGR criteria. Each eligible main question permits at most one follow-up; small talk, candidate questions and closing do not. Completing the plan triggers final feedback automatically. Recap ends early and asks the model to acknowledge unavailable evidence. An unsent answer can be included when requesting recap.
+
+The displayed answer ceiling is a conservative bound of twice the plan length (26); eligible-question restrictions make the actual maximum smaller. `MAX_ANSWERS` and `--max-answers` belong to the retained stateless API and do not change the browser controller's plan. The controller currently returns no generated hint, so the interface uses its translated fallback guidance. The first-job scenario label currently selects an apprenticeship posting and the same question plan, rather than a separate first-job interview.
+
+One normal turn makes one model call, with at most one validation correction. The final answer can also trigger a feedback task with up to two calls. Early recap makes only the feedback task. Invalid German/French/Italian interviewer output can fall back to the next bank question after two attempts; invalid English interviewer output and failed feedback are reported as errors. User retries after transport failures can add calls and must be counted. No live judge is used.
+
+## Docker packaging and practicality
+
+`src/run.sh` copies the versioned public resources from `data/interview/` into ignored `src/interview_data/` before building. The image bundles the Python runtime, application, static interface, prompts and these resources. It excludes credentials, experiments, simulation profiles, annotations and generated outputs. Session files persist in the host's ignored `data/sessions/` directory through a bind mount. Run `make web` or `make web-demo` to prepare the build context; a bare Docker build from a fresh clone lacks the staged resource directory.
+
+The image is an application client; it does not install or serve Apertus weights. Hosted inference does not verify the under-32-GB VRAM requirement. A consumer-hardware Apertus deployment, quantisation/context settings and measured memory usage remain outstanding. The recorded hosted development run meets the call-efficiency threshold, but does not establish the complete practicality gate.
+
+## Local manual review (not included in a fresh clone)
+
+The developer's local portal runs on port 8081 and groups individual-answer v1/v2 and whole-interview v5/v6. It preserves each version's labels separately, displays category summaries and draft/validated status, and links exact coach evidence to guideline notes. Originals are expanded by default, with collapsible AI-assisted English reading aids underneath. Both complete-interview versions now have cached English transcript translations; originals remain authoritative.
+
+The portal and its data remain under ignored `src/experiments/` and `data/manual_review/`. The local `make review` target requires those files and is not a supported command for a clean submission checkout. The previous individual review servers have been replaced by this single portal.

@@ -1,40 +1,69 @@
 # AI-Powered Job Interview Coach
 
-An Apertus-based interview practice app for teenagers preparing for their first job or apprenticeship. Built for Hack Apertus, Track 2a — Academia, and the FHGR challenge.
+An Apertus-based interview practice app for teenagers preparing for their first job or apprenticeship. Built for HackApertus 2026, Track 2A — FHGR.
 
-**Status:** Runnable web prototype with variable-length practice sessions, adaptive coaching, and a final recap. Benchmark datasets and consumer-hardware validation are still pending.
+**Status:** Runnable Docker web prototype with a complete interview controller and multilingual final feedback. Development simulations cover all 28 organiser scenarios. Coaching quality has known limitations; the official benchmark and consumer-hardware VRAM validation remain outstanding.
 
 ## Features
 
-- English, German, French, and Italian interfaces and coaching instructions.
-- Scenarios for IT, retail, hospitality, and technical apprenticeships, plus a first part-time or summer job.
-- One strength, one improvement, and an adaptive follow-up after each answer until recap.
-- A neutral answer placeholder and optional guidance matched to the next question.
-- Final feedback, transcript downloads, and responsive desktop/mobile layouts.
-- One model call per candidate answer, plus one for a requested recap; demo mode makes no calls.
+- English, German, French and Italian interface and coaching instructions.
+- A thirteen-question browser interview covering introduction, motivation, strengths/weaknesses, situational questions, candidate questions and closing, followed by feedback.
+- Questions selected from the supplied FHGR bank, with at most one follow-up per eligible main question.
+- Early recap, feedback across eleven criteria and conversation downloads.
+- A neutral answer placeholder with optional help. The current controller does not generate contextual hints; the interface uses its translated fallback guidance.
+- Responsive desktop/mobile layouts and demo mode without model calls.
+
+The scenario dropdown offers IT, retail, hospitality, technical and first-job practice labels. Currently all options use an apprenticeship question plan and a fictional apprenticeship posting; the first-job option does not yet have a dedicated non-apprenticeship flow.
 
 ## Quick start
 
-Install and start Docker Desktop or a compatible Docker engine, then run:
+Install and start Docker Desktop or a compatible Docker engine. From the repository root:
 
 ```sh
-cd track_2a
-make web-demo
+make -C track_2a web-demo
 ```
 
-Open **http://localhost:8080**. Demo mode uses fixed example responses; it does not provide personalised AI coaching. Stop with Ctrl+C.
+Open **http://localhost:8080**. Demo mode advances through bank questions and ends with fixed example feedback; it provides no personalised AI coaching. Stop with Ctrl+C.
 
-For Apertus credentials, local Ollama testing, deployment options, and batch evaluation, see the [implementation README](track_2a/README.md). `make web` runs the configured coach; `make run` is an alias for the web app.
+For Apertus, create the ignored `track_2a/data/.env` file:
 
-## Architecture
+```dotenv
+LLM_API_KEY=your-key
+LLM_BASE_URL=https://your-provider.example/v1
+LLM_NAME=swiss-ai/Apertus-v1.5-8B
+```
 
-The browser holds the conversation and sends it to a Python standard-library HTTP server. The server validates each request and calls the configured Apertus endpoint or local Ollama server. Docker packages the web server and static interface; model weights are served separately. API credentials stay on the server.
+Use the model identifier and API base URL accepted by your serving endpoint. Then run:
 
-The opening question is prepared per scenario. Each answer triggers one call for feedback, an adaptive question, and its optional hint. Get recap requests a summary when the user is ready; the coach can recommend wrapping up. A configurable answer limit and context safeguard require a recap when reached. The app does not automatically judge the coach during web sessions.
+```sh
+make -C track_2a web
+```
 
-## Development
+`make run` is an alias for the web app. See the [implementation README](track_2a/README.md) for deployment and local Python instructions. The Docker image contains the application and public runtime resources; Apertus weights and model serving are separate.
 
-Python 3.12 is the supported Docker runtime. No third-party Python packages or frontend build tools are required. For a local environment:
+## Architecture and visual overview
+
+```mermaid
+flowchart LR
+    Browser[Browser: language, scenario, answers] --> API[Python session API]
+    API --> Controller[Server-owned interview controller]
+    Resources[FHGR questions and fictional postings] --> Controller
+    Controller --> Interviewer[Apertus: transitions and bounded follow-ups]
+    Interviewer --> Controller
+    Controller --> Recap[Apertus: whole-session feedback]
+    Controller --> Storage[Local session JSON and request traces]
+    Controller --> Browser
+```
+
+Code controls stages, question subtypes, topic coverage, counts and termination. Apertus supplies transitions, company answers and permitted follow-ups. German/French/Italian main-question wording is retained from the bank; English wording is less constrained. Small talk receives a brief code-controlled acknowledgement. Feedback is produced at recap, rather than forcing a strength and improvement after every answer.
+
+One normal answer makes one interviewer request, with at most one validation correction. Completing the plan also triggers a feedback request; requesting early recap goes directly to feedback. A feedback request permits one correction. JSON validation and exact evidence checks do not guarantee truthful interpretation. No judge or candidate simulator runs in the live app.
+
+Sessions are owned and saved by the server. The browser keeps a display copy and sends a session ID, revision and answer. Refresh starts a new session; login and share links are not implemented. API credentials remain server-side. In AI mode, answers go to the configured model provider.
+
+## Development and evaluation
+
+Python 3.12 is the Docker runtime. No third-party Python packages or frontend build tools are required.
 
 ```sh
 conda env create -f environment.yml
@@ -44,25 +73,23 @@ make test
 python src/web.py --provider demo
 ```
 
-## Assessment and next steps
+All 30 application tests pass. The latest development run completed 28 simulated interviews in German, French and Italian: 417 candidate answers and 471 coach calls, averaging 1.13 calls per answer. Candidate answers were generated separately by Apertus from fictional scenario profiles; these are not human interviews. Assistant-authored whole-session review labels remain drafts awaiting validation.
 
-The challenge scores performance at 50%, consistency at 25%, and innovation at 25%, with runtime practicality as a required gate. The app uses one model call per answer, but the selected Apertus serving configuration still needs measurement against the under-32-GB VRAM requirement. A remote endpoint or development model does not establish compliance.
-
-Next steps are benchmark datasets, human-reviewed multilingual feedback, consistency measurement, and local Apertus runtime validation. Current example cases and judge scores are provisional and do not measure a student's employability.
+The challenge weights performance at 50%, consistency at 25% and innovation at 25%, with practicality as a required gate. Recorded call efficiency is below five calls per answer, but hosted inference does not establish operation below 32 GB VRAM. Grounding, candidate-question handling, repetition and follow-up selection remain weaknesses. See the [technical report](track_2a/technical_report.md) for measurements, review findings and limitations.
 
 ## Repository
 
 | Path | Purpose |
 | --- | --- |
-| [track_2a/README.md](track_2a/README.md) | Setup, deployment, and evaluation instructions |
-| `track_2a/src/` | Web server, provider adapters, prompts, and interface |
-| `track_2a/data/` | Example cases and ignored local outputs/configuration |
+| [track_2a/README.md](track_2a/README.md) | Setup, deployment and session behaviour |
+| `track_2a/src/` | Web server, controller, model clients, prompts, interface and tests |
+| `track_2a/data/interview/` | Public runtime questions, fictional postings, rubric and guidelines |
 | `track_2a/Makefile` | Web launch and test commands |
-| [track_2a/technical_report.md](track_2a/technical_report.md) | Technical report |
+| [track_2a/technical_report.md](track_2a/technical_report.md) | Approach, visual architecture and development results |
 | `environment.yml` | Optional Conda environment |
 
-Personal guides and local review/terminal tools are excluded from the published application.
+Credentials, sessions, experimental tooling, generated runs and manual-review labels remain local and are excluded from the published application. The local review interface is not a submission dependency.
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](LICENSE). Bundled organiser resources retain their upstream attribution and usage conditions; see [data provenance](track_2a/data/interview/README.md).
