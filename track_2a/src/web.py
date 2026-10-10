@@ -10,6 +10,7 @@ import interview_controller
 import copy
 import threading
 import uuid
+import voice
 from dataclasses import asdict
 
 STATIC = Path(__file__).parent / 'static'
@@ -198,7 +199,8 @@ class Handler(BaseHTTPRequestHandler):
                 opening=session.start();identifier=uuid.uuid4().hex
                 self.server.sessions[identifier]=session
                 self.persist_session(identifier,session)
-                return self.send(200,{'session_id':identifier,'opening':opening,'state':session.state(),'max_answers':len(session.plan)*2})
+                return self.send(200,{'session_id':identifier,'opening':opening,'state':session.state(),'max_answers':len(session.plan)*2,
+                                     'speech':voice.speech_output(opening,language,identifier,0,'opening')})
             identifier=payload['session_id']
             if not isinstance(identifier,str) or len(identifier)!=32:raise ValueError('Invalid session.')
             original=self.server.sessions.get(identifier)
@@ -228,6 +230,8 @@ class Handler(BaseHTTPRequestHandler):
                     original.validation_warnings=session.validation_warnings
                     self.persist_session(identifier,original)
                     raise
+            result['speech']=voice.speech_output(result['reply'],language,identifier,session.answers,
+                                                'feedback' if session.complete else 'interview')
             self.persist_session(identifier,session);self.server.sessions[identifier]=session
             return self.send(200,result)
 

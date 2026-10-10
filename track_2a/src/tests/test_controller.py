@@ -63,6 +63,7 @@ class ControllerTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder,patch.object(c,'ROOT',Path(folder)):
    status,opening=request('/api/session/start',{'language':'de','scenario':'it'});self.assertEqual(status,200)
    sid=opening['session_id'];payload=dict(language='de',scenario='it',session_id=sid,revision=0,answer='Ja, danke.')
+   self.assertEqual(opening['speech']['language'],'de-CH');self.assertEqual(opening['speech']['kind'],'opening')
    with patch.object(c.model_client,'apertus',side_effect=RuntimeError('offline')):
     self.assertEqual(request('/api/answer',payload)[0],502)
    self.assertEqual(server.sessions[sid].answers,0);self.assertEqual(server.sessions[sid].model_calls,1)
@@ -70,6 +71,7 @@ class ControllerTests(unittest.TestCase):
    with patch.object(c.model_client,'apertus',return_value=json.dumps(packet)):
     status,result=request('/api/answer',payload);self.assertEqual(status,200)
    self.assertEqual(result['state']['answers'],1);self.assertEqual(result['state']['model_calls'],2)
+   self.assertEqual(result['speech']['session_id'],sid);self.assertNotEqual(result['speech']['turn_id'],opening['speech']['turn_id'])
    self.assertEqual(request('/api/answer',payload)[0],400)
    saved=json.loads((Path(folder)/'data/sessions'/f'{sid}.json').read_text());self.assertEqual(saved['answers'],1);self.assertEqual(saved['model_calls'],2)
 

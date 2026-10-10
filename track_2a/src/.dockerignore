@@ -5,6 +5,7 @@
 !interview_context.py
 !interview_controller.py
 !web.py
+!voice.py
 !prompts/
 !prompts/web/
 !prompts/web/*.txt

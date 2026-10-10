@@ -2,6 +2,21 @@ const $ = id => document.getElementById(id);
 let transcript = [], config, busy = false, complete = false, language = 'en', scenario = 'it', canContinue = true, suggestRecap = false;
 let locales, sessionId = null, sessionRevision = 0, sessionState = null;
 const t = key => locales[language][key];
+// Optional voice adapters listen for these events; text practice needs no adapter.
+function cancelVoice() {
+  window.dispatchEvent(new CustomEvent('coach:cancel', {detail:{session_id:sessionId}}));
+}
+function publishVoice(speech) {
+  if (speech) window.dispatchEvent(new CustomEvent('coach:output', {detail:speech}));
+}
+window.addEventListener('pagehide', cancelVoice);
+window.addEventListener('coach:transcription', event => {
+  const input=event.detail;
+  if (!input || input.final !== true || input.session_id !== sessionId || input.language !== language || busy || complete || !canContinue) return;
+  if (typeof input.text !== 'string' || !input.text.trim() || input.text.length>4000 || $('answer').value.trim()) return;
+  // A final ASR transcript becomes an editable draft; submission stays explicit.
+  cancelVoice(); $('answer').value=input.text; update(); $('answer').focus();
+});
 function translate() {
   document.documentElement.lang = language;
   document.title = t('title');
@@ -36,6 +51,7 @@ function bubble(role, content) {
   card.append(label, text); $('conversation').append(card);
 }
 async function reset() {
+  cancelVoice();
   busy = true; sessionId = null; sessionRevision = 0;
   transcript = [{role: 'assistant', content: config.scenarios[scenario].translations[language].opening}]; complete = false; canContinue = true; suggestRecap = false;
   $('conversation').replaceChildren(); bubble('assistant', transcript[0].content);
@@ -45,6 +61,7 @@ async function reset() {
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
     sessionId = data.session_id; sessionState = data.state; config.max_answers = data.max_answers;
     transcript = [{role:'assistant',content:data.opening}]; $('conversation').replaceChildren(); bubble('assistant',data.opening);
+    publishVoice(data.speech);
   } catch(error) { $('status').textContent = t('error'); }
   finally { busy = false; update(); }
 }
@@ -79,6 +96,7 @@ async function submitToCoach(recap = false) {
   const answer = $('answer').value.trim();
   if ((!recap && !answer) || (recap && !answer && !transcript.some(item => item.role === 'user'))) return;
   const pending = answer ? [...transcript, {role: 'user', content: answer}] : [...transcript];
+  cancelVoice();
   busy = true; $('status').textContent = t(recap ? 'recapping' : 'thinking'); update();
   try {
     const response = await fetch(recap ? '/api/recap' : '/api/answer', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({session_id:sessionId,revision:sessionRevision,answer,language,scenario})});
@@ -87,6 +105,7 @@ async function submitToCoach(recap = false) {
     $('answer').value = ''; $('answer-hint').textContent = data.hint || t('genericHint');
     sessionRevision = data.state.answers; sessionState = data.state;
     complete = data.complete; canContinue = data.can_continue; suggestRecap = data.suggest_recap;
+    publishVoice(data.speech);
     $('finished').hidden = !complete; $('status').textContent = '';
   } catch (error) { $('status').textContent = t('error'); }
   finally {
