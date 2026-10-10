@@ -1,8 +1,8 @@
 # Interview Coach — technical report
 
-**Track 2A** — `FHGR` 
-**Team:** `Next Question` -- `Alisa Smirnova`
-**Demo:** TBD
+* **Track 2A** — `FHGR` 
+* **Team:** `Next Question` -- `Alisa Smirnova`
+* **Demo:** TBD
 
 ## Approach and architecture
 
