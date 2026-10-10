@@ -12,6 +12,7 @@ An Apertus-based interview practice app for teenagers preparing for their first 
 - Early recap, feedback across eleven criteria and conversation downloads.
 - A neutral answer placeholder with optional help. The current controller does not generate contextual hints; the interface uses its translated fallback guidance.
 - Responsive desktop/mobile layouts and demo mode without model calls.
+- Voice adapter hooks: ordered speech output and confirmed-transcript input; actual audio services are not included.
 
 The scenario dropdown offers IT, retail, hospitality, technical and first-job practice labels. Currently all options use an apprenticeship question plan and a fictional apprenticeship posting; the first-job option does not yet have a dedicated non-apprenticeship flow.
 
@@ -59,6 +60,8 @@ Code controls stages, question subtypes, topic coverage, counts and termination.
 
 One normal answer makes one interviewer request, with at most one validation correction. Completing the plan also triggers a feedback request; requesting early recap goes directly to feedback. A feedback request permits one correction. JSON validation and exact evidence checks do not guarantee truthful interpretation. No judge or candidate simulator runs in the live app.
 
+For future voice support, responses expose language-tagged speech segments and turn IDs. Browser events support playback cancellation and recognised text as an editable answer draft. No microphone or audio playback is enabled; model responses arrive in full rather than streaming. See the [voice integration contract](track_2a/README.md#voice-integration-contract).
+
 Sessions are owned and saved by the server. The browser keeps a display copy and sends a session ID, revision and answer. Refresh starts a new session; login and share links are not implemented. API credentials remain server-side. In AI mode, answers go to the configured model provider.
 
 ## Development and evaluation
@@ -73,7 +76,7 @@ make test
 python src/web.py --provider demo
 ```
 
-All 30 application tests pass. The latest development run completed 28 simulated interviews in German, French and Italian: 417 candidate answers and 471 coach calls, averaging 1.13 calls per answer. Candidate answers were generated separately by Apertus from fictional scenario profiles; these are not human interviews. Assistant-authored whole-session review labels remain drafts awaiting validation.
+All 33 application tests pass. The latest development run completed 28 simulated interviews in German, French and Italian: 417 candidate answers and 471 coach calls, averaging 1.13 calls per answer. Candidate answers were generated separately by Apertus from fictional scenario profiles; these are not human interviews. Assistant-authored whole-session review labels remain drafts awaiting validation.
 
 The challenge weights performance at 50%, consistency at 25% and innovation at 25%, with practicality as a required gate. Recorded call efficiency is below five calls per answer, but hosted inference does not establish operation below 32 GB VRAM. Grounding, candidate-question handling, repetition and follow-up selection remain weaknesses. See the [technical report](track_2a/technical_report.md) for measurements, review findings and limitations.
 

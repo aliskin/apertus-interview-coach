@@ -84,7 +84,7 @@ See `README.md` for Docker and environment setup. `make run` builds and starts t
 
 The public checkout supports `make web-demo`, configured Apertus `make web`, and `make test` from `track_2a`. Experimental scenario runners and review tools are intentionally excluded from Git, so the reported development runs cannot be reproduced using only a fresh submission checkout. The supplied organiser data and local scripts were used during development; no local-path experiment commands are required for deployment.
 
-Validation: 30 application tests pass, including progression bounds, conditional questions, hidden-persona exclusion, exact evidence rejection and early recap. These use mocked model responses. The initial image built and started successfully. After subsequent controller/API refinements, a rebuild encountered a Docker Hub HTTP 500; those refinements were smoke-tested in the existing image using read-only source mounts. A fresh end-to-end build of the final submitted image remains to be verified. Documentation updates do not constitute a new Docker verification. Local VRAM feasibility is outstanding.
+Validation: 33 application tests pass, including progression bounds, conditional questions, hidden-persona exclusion, exact evidence rejection and early recap. These use mocked model responses. The initial image built and started successfully. After subsequent controller/API refinements, a rebuild encountered a Docker Hub HTTP 500; those refinements were smoke-tested in the existing image using read-only source mounts. A fresh end-to-end build of the final submitted image remains to be verified. Documentation updates do not constitute a new Docker verification. Local VRAM feasibility is outstanding.
 
 ## Instruction localisation and fresh development run (v6)
 
@@ -120,3 +120,13 @@ Both full-interview versions have cached translations for all 56 interviews (888
 The versioned submission includes the controller, multilingual prompts, public runtime resources, web interface, model client, Docker packaging, deployment instructions and tests. This report and the project README contain a visual architecture overview. Generated transcripts, review labels, translation caches, credentials and experimental scripts remain local.
 
 The image depends on a separately served Apertus model. Official benchmark scoring, repeatability/consistency measurements, human learning outcomes and local VRAM measurement are not available. The reported 1.13 coach calls per answer is a recorded development-run average, not a guarantee for unlimited user retries. The work is submitted as a prototype with these limitations disclosed.
+
+## Voice readiness
+
+`src/voice.py` is a dependency-free boundary between delivered coach text and a future speech adapter. Controlled APIs attach a versioned speech envelope containing session/turn IDs, a BCP-47 language tag and ordered chunks of at most 240 characters. Segmentation does not change prompts, progression, candidate-visible text or coach-call counts. Early recap gets a different turn ID even when the answer revision is unchanged. Docker includes this module.
+
+The browser emits output and cancellation events; cancellation covers reset, language/scenario changes, submission and page exit. A future ASR adapter supplies a final transcript tagged with the active session and UI language. The browser accepts it only as an editable draft, without overwriting typed input or automatically submitting. Interim/stale transcripts and unsupported lengths are ignored. The coach continues to receive confirmed text, with no acoustic/prosody judgments.
+
+This is an integration contract, not implemented speech functionality or demonstrated real-time latency. There is no microphone capture, audio transport, synthesis/playback, model-token streaming or new speech dependency. TTS can consume ordered segments after response validation; streaming model output would need further validation/transport work. Adapter consent, voice availability and network policy remain deployment concerns. See the implementation README for event names and payload examples.
+
+Validation includes chunk preservation/bounds for multilingual and unbroken text, distinct recap/playback identities, and controlled-API speech metadata. All 33 application tests pass. The final Docker image still needs a fresh build and end-to-end verification after this runtime change.

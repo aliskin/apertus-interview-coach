@@ -94,7 +94,7 @@ From this directory, run:
 make test
 ```
 
-All 30 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
+All 33 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
 
 The latest local development run completed all 28 organiser scenarios with a separate Apertus candidate simulator. It recorded 417 candidate answers and 471 coach calls, including corrections and final feedback: 1.13 calls per answer. Whole-session assistant reviews are drafts awaiting user validation. Language consistency improved, while grounding, candidate-question handling and follow-up selection remain weak. See [technical_report.md](technical_report.md) for details.
 
@@ -121,3 +121,51 @@ The image is an application client; it does not install or serve Apertus weights
 The developer's local portal runs on port 8081 and groups individual-answer v1/v2 and whole-interview v5/v6. It preserves each version's labels separately, displays category summaries and draft/validated status, and links exact coach evidence to guideline notes. Originals are expanded by default, with collapsible AI-assisted English reading aids underneath. Both complete-interview versions now have cached English transcript translations; originals remain authoritative.
 
 The portal and its data remain under ignored `src/experiments/` and `data/manual_review/`. The local `make review` target requires those files and is not a supported command for a clean submission checkout. The previous individual review servers have been replaced by this single portal.
+
+## Voice integration contract
+
+The application is text-only, with adapter hooks for future speech recognition (ASR) and text-to-speech (TTS). No microphone, audio upload, speech SDK, playback or model-token streaming is enabled. The existing text interface needs no voice adapter and makes the same coach calls.
+
+Controlled session responses (`/api/session/start`, `/api/answer` and `/api/recap` with a session ID) include a `speech` field. The legacy stateless API does not. `src/voice.py` converts the opening or delivered reply into ordered sentence/paragraph chunks of at most 240 characters. This segmentation uses code rather than another LLM call. The original visible response is unchanged; speech chunks normalise boundary whitespace. The contract is:
+
+```json
+{
+  "version": 1,
+  "session_id": "server-generated-session-id",
+  "turn_id": "server-generated-session-id:1:interview",
+  "language": "de-CH",
+  "kind": "interview",
+  "segments": [
+    {"id": "server-generated-session-id:1:interview:0", "text": "Danke."},
+    {"id": "server-generated-session-id:1:interview:1", "text": "Erzähl uns etwas über dich."}
+  ],
+  "streaming": false
+}
+```
+
+Language tags are `en-GB`, `de-CH`, `fr-CH` and `it-CH`. `kind` is `opening`, `interview` or `feedback`. These labels identify output turns, not separately classified acknowledgement/question segments. `turn_id` uses session ID, answer revision and kind, so early recap without another answer has a different ID from the preceding interview turn. Segment IDs allow a TTS adapter to deduplicate and play in array order. The envelope is produced after the complete model response has been validated; generation is not streamed. An adapter can synthesise and play short segments incrementally after receiving it. Future low-latency model streaming requires a separate transport/validation design.
+
+The browser publishes these events on `window`:
+
+| Event | Detail | Adapter responsibility |
+| --- | --- | --- |
+| `coach:output` | The `speech` envelope | Enqueue speech in order, track the session/turn IDs, ignore duplicate or stale output. |
+| `coach:cancel` | `{session_id}` | Stop playback and cancel pending synthesis/recognition; discard late callbacks. Fired on restart, language/scenario reset, answer/recap submission and page exit. This does not cancel an in-flight coach request. |
+| `coach:transcription` | `{session_id, language, final, text}` supplied by ASR | Send only a final transcript for the current session; `language` uses the UI code (`en`, `de`, `fr`, `it`). |
+
+A future ASR adapter can populate the answer draft using:
+
+```javascript
+window.dispatchEvent(new CustomEvent('coach:transcription', {
+  detail: {
+    session_id: currentSessionId,
+    language: 'de',
+    final: true,
+    text: 'Ich interessiere mich für Technik.'
+  }
+}));
+```
+
+The browser rejects interim, stale-session, wrong-language, empty and over-4,000-character transcripts, and transcripts arriving while a request is pending or the session is complete. It does not overwrite an existing draft or submit automatically. The user reviews/edits the recognised text and presses Send. Only that confirmed text reaches the coach through the existing answer API; audio, confidence, accent and inferred voice traits are not sent or assessed.
+
+An audio adapter must obtain user permission before using the microphone or sending speech text to an additional service. It must register its listeners before session start, handle cancellation and choose a compatible voice for the language tag. The current server policy allows same-origin connections; using an external browser speech service needs an explicit deployment/privacy and content-security-policy decision. Voice adapters are not implemented or enabled by this change.
