@@ -36,7 +36,7 @@ if ! docker info >/dev/null 2>&1; then
     echo 'Docker is installed, but its engine is unavailable. Start Docker Desktop and wait until the engine is running, then retry. If it is already running, check docker context ls and DOCKER_HOST.' >&2
     exit 1
 fi
-mkdir -p data/profiles
+mkdir -p data/profiles data/sessions
 set -- --provider "$coach_provider" --model "$coach_model"
 if [ -n "${PROFILE:-}" ]; then
     case "$PROFILE" in
@@ -47,6 +47,8 @@ if [ -n "${PROFILE:-}" ]; then
     [ -f "$PROFILE" ] || { echo 'Profile file not found.' >&2; exit 1; }
     set -- "$@" --profile "$PROFILE"
 fi
+mkdir -p src/interview_data
+cp data/interview/*.json data/interview/*.jsonl src/interview_data/
 docker build -t apertus-interview-coach -f src/Dockerfile src
 # In a container, localhost is the container itself, not the host Ollama server.
 export OLLAMA_BASE_URL="${DOCKER_OLLAMA_BASE_URL:-http://host.docker.internal:11434}"
@@ -55,4 +57,5 @@ docker run --rm --add-host host.docker.internal:host-gateway \
     --user "$(id -u):$(id -g)" \
     -e LLM_API_KEY -e LLM_BASE_URL -e LLM_NAME -e OLLAMA_BASE_URL -e MAX_ANSWERS \
     -v "$PWD/data/profiles:/app/track_2a/data/profiles:ro" \
+    -v "$PWD/data/sessions:/app/track_2a/data/sessions" \
     apertus-interview-coach "$@"
