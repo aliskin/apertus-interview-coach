@@ -1,0 +1,353 @@
+{
+  "language": "en",
+  "rubric": [
+    {
+      "key": "clarity",
+      "meaning": "Comprehensibility, structure and traceability of the answers",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Answers are confused, incomplete or hard to follow"
+        },
+        {
+          "score": 2,
+          "anchor": "Main idea recognisable but unstructured or rambling"
+        },
+        {
+          "score": 3,
+          "anchor": "Clearly phrased, a common thread is visible"
+        },
+        {
+          "score": 4,
+          "anchor": "Precise, structured, to the point"
+        }
+      ]
+    },
+    {
+      "key": "relevance",
+      "meaning": "Does the answer fit the question asked and the apprenticeship applied for?",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Answer misses the topic"
+        },
+        {
+          "score": 2,
+          "anchor": "Partly fitting but contains unnecessary side information"
+        },
+        {
+          "score": 3,
+          "anchor": "Answer clearly addresses the question"
+        },
+        {
+          "score": 4,
+          "anchor": "Answer is targeted and additionally links to the apprenticeship"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "meaning": "Recognisable genuine interest in the occupation and the company",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "No recognisable interest, empty phrases"
+        },
+        {
+          "score": 2,
+          "anchor": "Interest present but poorly justified"
+        },
+        {
+          "score": 3,
+          "anchor": "Motivation is plausibly justified"
+        },
+        {
+          "score": 4,
+          "anchor": "Motivation is personal, justified and linked to the future"
+        }
+      ]
+    },
+    {
+      "key": "self_reflection",
+      "meaning": "Ability to assess one's own strengths, weaknesses and experiences realistically",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "No or unrealistic self-assessment"
+        },
+        {
+          "score": 2,
+          "anchor": "Weakness named but without insight or learning step"
+        },
+        {
+          "score": 3,
+          "anchor": "Realistic self-assessment with a learning approach"
+        },
+        {
+          "score": 4,
+          "anchor": "Reflective assessment incl. concrete measure and effect"
+        }
+      ]
+    },
+    {
+      "key": "communication",
+      "meaning": "Expression, choice of words, tone, active listening",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Impolite, too casual or inappropriate tone"
+        },
+        {
+          "score": 2,
+          "anchor": "Understandable but hesitant or too brief"
+        },
+        {
+          "score": 3,
+          "anchor": "Appropriate, friendly and clear expression"
+        },
+        {
+          "score": 4,
+          "anchor": "Confident, appropriate, responsive to the interviewer"
+        }
+      ]
+    },
+    {
+      "key": "concrete_examples",
+      "meaning": "Statements are backed by real experiences/situations rather than merely claimed",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Only general claims without evidence"
+        },
+        {
+          "score": 2,
+          "anchor": "Example given but vague"
+        },
+        {
+          "score": 3,
+          "anchor": "Concrete, comprehensible example"
+        },
+        {
+          "score": 4,
+          "anchor": "Example incl. situation, action and result"
+        }
+      ]
+    },
+    {
+      "key": "demeanor",
+      "meaning": "Politeness, self-confidence, tone, body language (if observable)",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Appears insecure, impolite or distant"
+        },
+        {
+          "score": 2,
+          "anchor": "Basically polite but nervous or reserved"
+        },
+        {
+          "score": 3,
+          "anchor": "Friendly, attentive, appropriately confident"
+        },
+        {
+          "score": 4,
+          "anchor": "Poised, engaged, positive presence"
+        }
+      ]
+    },
+    {
+      "key": "preparation",
+      "meaning": "Knowledge of the training company, the occupation and its requirements",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "No information about company/occupation"
+        },
+        {
+          "score": 2,
+          "anchor": "Basic but superficial knowledge"
+        },
+        {
+          "score": 3,
+          "anchor": "Company and occupation are known"
+        },
+        {
+          "score": 4,
+          "anchor": "Sound knowledge actively brought into the conversation"
+        }
+      ]
+    },
+    {
+      "key": "goal_orientation",
+      "meaning": "Clarity about career choice and long-term ideas",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "No idea about the future or career choice"
+        },
+        {
+          "score": 2,
+          "anchor": "Vague idea without clear link to the apprenticeship"
+        },
+        {
+          "score": 3,
+          "anchor": "Clear goal matching the apprenticeship"
+        },
+        {
+          "score": 4,
+          "anchor": "Clear goal with long-term perspective"
+        }
+      ]
+    },
+    {
+      "key": "difficult_questions",
+      "meaning": "Reaction to critical, unexpected or uncomfortable questions",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Blocks, evades or becomes defensive"
+        },
+        {
+          "score": 2,
+          "anchor": "Responds but appears overwhelmed"
+        },
+        {
+          "score": 3,
+          "anchor": "Stays calm and answers factually"
+        },
+        {
+          "score": 4,
+          "anchor": "Poised, constructive handling, possibly with a learning effect"
+        }
+      ]
+    },
+    {
+      "key": "initiative",
+      "meaning": "Does the candidate ask their own meaningful questions to the company at the end?",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "No questions at the end"
+        },
+        {
+          "score": 2,
+          "anchor": "A question is asked but it is generic"
+        },
+        {
+          "score": 3,
+          "anchor": "Question shows genuine interest"
+        },
+        {
+          "score": 4,
+          "anchor": "Question shows preparation and foresight"
+        }
+      ]
+    }
+  ],
+  "guidelines": [
+    {
+      "id": "T1",
+      "text": "Appreciative and encouraging, never condescending or ironic."
+    },
+    {
+      "id": "T2",
+      "text": "Speak at eye level – like a supportive coach, not a teacher handing out grades."
+    },
+    {
+      "id": "T3",
+      "text": "No exaggerated praise ('perfect', 'brilliant') and no dramatising ('that was bad')."
+    },
+    {
+      "id": "S1",
+      "text": "Clear, simple sentences; no unexplained HR/psychology jargon."
+    },
+    {
+      "id": "S2",
+      "text": "Active rather than passive voice."
+    },
+    {
+      "id": "S3",
+      "text": "Short sentences."
+    },
+    {
+      "id": "S4",
+      "text": "[Addition, not in the FHGR original] Give feedback in the language of the interview (de/fr/it; for dialect: Standard German)."
+    },
+    {
+      "id": "R1",
+      "text": "Strengths first, then room for improvement."
+    },
+    {
+      "id": "R2",
+      "text": "At most 1–2 key points per criterion; do not list everything at once."
+    },
+    {
+      "id": "R3",
+      "text": "Always end with a concrete, feasible next step."
+    },
+    {
+      "id": "B1",
+      "text": "Feedback always refers to the observed behaviour/answer, never to the person as a whole."
+    },
+    {
+      "id": "B2",
+      "text": "Not 'You are insecure' but 'Your voice got quieter on this question – this may indicate uncertainty.'"
+    },
+    {
+      "id": "B3",
+      "text": "No diagnoses or character labels ('introverted', 'unmotivated', 'shy')."
+    },
+    {
+      "id": "E1",
+      "text": "Foster a growth mindset: frame mistakes as learning opportunities."
+    },
+    {
+      "id": "E2",
+      "text": "Use 'not yet' rather than 'not'."
+    },
+    {
+      "id": "E3",
+      "text": "Age-appropriate expectations – a 15-year-old need not sound like an experienced professional."
+    },
+    {
+      "id": "M1",
+      "text": "Do not penalise nervousness, slips of the tongue or pauses."
+    },
+    {
+      "id": "M2",
+      "text": "For very weak answers keep an encouraging frame without glossing over or hiding the weakness."
+    },
+    {
+      "id": "K1",
+      "text": "Back every point with a quote or reference to a concrete moment in the conversation."
+    },
+    {
+      "id": "K2",
+      "text": "Tips must be concretely actionable, not vague ('show more confidence' is too abstract)."
+    },
+    {
+      "id": "K3",
+      "text": "Never rate without evidence; if there is none, say so instead of guessing. Do not invent content."
+    },
+    {
+      "id": "L1",
+      "text": "No judgement of appearance, voice (except re nervousness), family background or personality traits."
+    },
+    {
+      "id": "L2",
+      "text": "Never create fear ('You'll never find an apprenticeship like this'), not even implicitly."
+    },
+    {
+      "id": "L3",
+      "text": "On signs of strong insecurity or self-doubt: respond supportively and refer to a real person (career counsellor, parents, teacher)."
+    },
+    {
+      "id": "L4",
+      "text": "No comparisons with other young people or an 'ideal' candidate."
+    },
+    {
+      "id": "A1",
+      "text": "Always end with an encouraging sentence that stresses the practice character."
+    }
+  ]
+}

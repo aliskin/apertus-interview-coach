@@ -6,6 +6,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import model_client as experiment
 import interview_context
+import interview_controller
+import copy
+import threading
+import uuid
+from dataclasses import asdict
 
 STATIC = Path(__file__).parent / 'static'
 LOCALES = json.loads((STATIC / 'locales.json').read_text(encoding='utf-8'))
@@ -139,7 +144,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send(200, (STATIC / name).read_bytes(), mime)
 
     def do_POST(self):
-        if self.path not in ('/api/answer', '/api/recap'):
+        if self.path not in ('/api/answer', '/api/recap', '/api/session/start'):
             return self.send(404, {'error': 'Not found'})
         # Same-origin requests only; the API never accepts credentials or endpoint URLs.
         if self.headers.get('Origin') not in (None, 'http://' + self.headers.get('Host', '')):
@@ -157,6 +162,8 @@ class Handler(BaseHTTPRequestHandler):
             scenario = payload.get('scenario', 'it')
             if not isinstance(scenario, str) or scenario not in SCENARIOS:
                 raise ValueError('Unsupported scenario.')
+            if self.path == '/api/session/start' or payload.get('session_id'):
+                return self.controlled_request(payload, language, scenario)
             transcript = payload['transcript']
             recap = self.path == '/api/recap'
             max_answers = self.server.max_answers
@@ -180,6 +187,55 @@ class Handler(BaseHTTPRequestHandler):
             self.send(502, {'error': 'The coach could not connect. Check the model server settings, then try again. Your answer is still here.'})
 
 
+    def controlled_request(self, payload, language, scenario):
+        # Server-owned state: clients cannot replace transcripts, plans or stage metadata.
+        with self.server.session_lock:
+            if self.path == '/api/session/start':
+                posting_id = {'it':'P-11','retail':'P-06','hospitality':'P-13','technical':'P-01','first-job':'P-03'}[scenario]
+                ids=['Q-01-01','Q-02-01','Q-03-01','Q-03-04','Q-04-04','Q-05-01','Q-05-03','Q-06-01','Q-07-01','Q-SIT-02','Q-08-02','Q-09-01','Q-10-01']
+                session=interview_controller.Session(language,interview_controller.POSTINGS[posting_id],interview_controller.make_plan(ids))
+                session.provider=self.server.provider;session.model=self.server.model
+                opening=session.start();identifier=uuid.uuid4().hex
+                self.server.sessions[identifier]=session
+                self.persist_session(identifier,session)
+                return self.send(200,{'session_id':identifier,'opening':opening,'state':session.state(),'max_answers':len(session.plan)*2})
+            identifier=payload['session_id']
+            if not isinstance(identifier,str) or len(identifier)!=32:raise ValueError('Invalid session.')
+            original=self.server.sessions.get(identifier)
+            if original is None:raise ValueError('Session not found. Start a new session.')
+            if original.language!=language:raise ValueError('Session language cannot change.')
+            if payload.get('revision')!=original.answers:raise ValueError('Session changed. Reload before submitting again.')
+            if original.complete:raise ValueError('Session is complete. Start a new session.')
+            session=copy.deepcopy(original)
+            if self.server.provider=='demo':
+                text=payload.get('answer','')
+                if not isinstance(text,str) or len(text)>4000:raise ValueError('Invalid answer.')
+                if not text.strip() and self.path!='/api/recap':raise ValueError('An answer is required.')
+                if not text.strip() and not session.answers:raise ValueError('Answer at least one question before recap.')
+                if text.strip():session.transcript.append({'role':'user','content':text.strip()});session.answers+=1
+                done=self.path=='/api/recap' or session.index+1==len(session.plan)
+                if done:session.complete=True;session.current_stage='feedback';session.question_subtype='session_recap';reply=LOCALES[language]['demo3']
+                else:
+                    session.index+=1;session.main_question_count+=1;session.set_question(session.plan[session.index]);reply=interview_controller.question_text(session.plan[session.index],language)
+                session.transcript.append({'role':'assistant','content':reply})
+                result={'reply':reply,'hint':'','complete':done,'can_continue':not done,'suggest_recap':False,'state':session.state()}
+            else:
+                try:
+                    result=session.answer(payload.get('answer',''),recap=self.path=='/api/recap')
+                except (ValueError,KeyError,TypeError,RuntimeError,OSError):
+                    # Roll back dialogue, but retain spent requests for accurate retry accounting.
+                    original.model_calls=session.model_calls;original.requests=session.requests
+                    original.validation_warnings=session.validation_warnings
+                    self.persist_session(identifier,original)
+                    raise
+            self.persist_session(identifier,session);self.server.sessions[identifier]=session
+            return self.send(200,result)
+
+    def persist_session(self,identifier,session):
+        folder=interview_controller.ROOT/'data/sessions';folder.mkdir(parents=True,exist_ok=True)
+        temporary=folder/(identifier+'.tmp');temporary.write_text(json.dumps(asdict(session),ensure_ascii=False));temporary.replace(folder/(identifier+'.json'))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--provider', choices=['apertus', 'ollama', 'demo'], default=os.getenv('COACH_PROVIDER', 'apertus'))
@@ -192,6 +248,13 @@ def main():
     if not 2 <= args.max_answers <= 50:
         parser.error('--max-answers must be between 2 and 50.')
     server = ThreadingHTTPServer((args.host, args.port), Handler)
+    server.sessions = {}
+    folder=interview_controller.ROOT/'data/sessions'
+    if folder.exists():
+        for saved in folder.glob('*.json'):
+            try:server.sessions[saved.stem]=interview_controller.Session(**json.loads(saved.read_text()))
+            except (ValueError,TypeError):pass
+    server.session_lock = threading.Lock()
     server.max_answers = args.max_answers
     server.provider, server.model = args.provider, args.model
     server.profile = experiment.load_profile(args.profile)

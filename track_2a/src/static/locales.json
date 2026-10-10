@@ -16,7 +16,7 @@
     "step3": "Recap",
     "reminder": "A LITTLE REMINDER",
     "tip": "School projects, hobbies and helping at home all count as experience.",
-    "privacy": "Answers are sent to the configured model provider. This app keeps the conversation in this tab only. Avoid names or personal details.",
+    "privacy": "In AI mode, answers are sent to the configured model provider. This app also saves sessions on the local server. Avoid names and personal details.",
     "practice": "Interview practice",
     "space": "PRACTICE SPACE",
     "heading": "Let’s get comfortable.",
@@ -70,7 +70,14 @@
     "demoFollowupHint3": "Choose a real situation and describe your own contribution.",
     "demoFollowup4": "For a first job, learning from mistakes can be useful.\n\nTell me about something you tried that did not go as planned and what you learned.",
     "demoFollowupHint4": "Focus on what you tried and one thing you would do differently.",
-    "demoWrap": "This demo has reached the end of its example questions. Choose Get recap to finish with a practice summary."
+    "demoWrap": "This demo has reached the end of its example questions. Choose Get recap to finish with a practice summary.",
+    "stage_introduction": "Introduction",
+    "stage_motivation": "Motivation",
+    "stage_strengths_weaknesses": "Strengths & weaknesses",
+    "stage_situational": "Situational questions",
+    "stage_candidate_questions": "Your questions",
+    "stage_closing": "Closing",
+    "stage_feedback": "Feedback"
   },
   "de": {
     "title": "First Step · Bewerbungsgespräch üben",
@@ -89,7 +96,7 @@
     "step3": "Rückblick",
     "reminder": "DENK DARAN",
     "tip": "Schulprojekte, Hobbys und Mithilfe zu Hause zählen auch als Erfahrung.",
-    "privacy": "Deine Antworten werden an den eingerichteten Modellanbieter gesendet. Diese App behält das Gespräch nur in diesem Tab. Vermeide Namen und persönliche Angaben.",
+    "privacy": "Im KI-Modus gehen deine Antworten an den eingerichteten Modellanbieter. Die App speichert Sitzungen auch auf dem lokalen Server. Vermeide Namen und persönliche Angaben.",
     "practice": "Bewerbungsgespräch üben",
     "space": "DEIN ÜBUNGSRAUM",
     "heading": "Komm erst mal an.",
@@ -143,7 +150,14 @@
     "demoFollowupHint3": "Wähle eine echte Situation und beschreibe deinen eigenen Beitrag.",
     "demoFollowup4": "Beim ersten Job kann es helfen, aus Fehlern zu lernen.\n\nErzähl von etwas, das nicht wie geplant geklappt hat, und was du daraus gelernt hast.",
     "demoFollowupHint4": "Beschreibe, was du versucht hast und was du anders machen würdest.",
-    "demoWrap": "Die Beispielfragen dieser Demo sind zu Ende. Wähle Zusammenfassung, um die Übung mit einem Rückblick abzuschliessen."
+    "demoWrap": "Die Beispielfragen dieser Demo sind zu Ende. Wähle Zusammenfassung, um die Übung mit einem Rückblick abzuschliessen.",
+    "stage_introduction": "Kennenlernen",
+    "stage_motivation": "Motivation",
+    "stage_strengths_weaknesses": "Stärken & Schwächen",
+    "stage_situational": "Situationsfragen",
+    "stage_candidate_questions": "Deine Fragen",
+    "stage_closing": "Abschluss",
+    "stage_feedback": "Feedback"
   },
   "fr": {
     "title": "First Step · Préparer un entretien",
@@ -162,7 +176,7 @@
     "step3": "Bilan",
     "reminder": "PETIT RAPPEL",
     "tip": "Les projets scolaires, les loisirs et l’aide à la maison comptent aussi comme expériences.",
-    "privacy": "Tes réponses sont envoyées au fournisseur du modèle configuré. L’application garde la conversation uniquement dans cet onglet. Évite les noms et les détails personnels.",
+    "privacy": "En mode IA, tes réponses sont envoyées au fournisseur du modèle configuré. L’application enregistre aussi les séances sur le serveur local. Évite les noms et les détails personnels.",
     "practice": "Préparer un entretien",
     "space": "ESPACE D’ENTRAÎNEMENT",
     "heading": "Prends tes marques.",
@@ -216,7 +230,14 @@
     "demoFollowupHint3": "Choisis une situation réelle et explique ta propre contribution.",
     "demoFollowup4": "Pour un premier job, apprendre de ses erreurs peut être utile.\n\nRaconte quelque chose qui ne s’est pas passé comme prévu et ce que tu as appris.",
     "demoFollowupHint4": "Explique ce que tu as essayé et ce que tu ferais autrement.",
-    "demoWrap": "Cette démo a terminé ses questions d’exemple. Choisis Obtenir un bilan pour conclure avec un résumé de ta pratique."
+    "demoWrap": "Cette démo a terminé ses questions d’exemple. Choisis Obtenir un bilan pour conclure avec un résumé de ta pratique.",
+    "stage_introduction": "Présentation",
+    "stage_motivation": "Motivation",
+    "stage_strengths_weaknesses": "Forces et points à améliorer",
+    "stage_situational": "Mises en situation",
+    "stage_candidate_questions": "Tes questions",
+    "stage_closing": "Conclusion",
+    "stage_feedback": "Feedback"
   },
   "it": {
     "title": "First Step · Preparati al colloquio",
@@ -235,7 +256,7 @@
     "step3": "Riepilogo",
     "reminder": "UN PICCOLO PROMEMORIA",
     "tip": "Anche i progetti scolastici, gli hobby e l’aiuto in casa contano come esperienze.",
-    "privacy": "Le risposte vengono inviate al fornitore del modello configurato. L’app conserva la conversazione solo in questa scheda. Evita nomi e dettagli personali.",
+    "privacy": "In modalità IA, le risposte vengono inviate al fornitore del modello configurato. L’app salva anche le sessioni sul server locale. Evita nomi e dettagli personali.",
     "practice": "Esercitati per il colloquio",
     "space": "SPAZIO DI PRATICA",
     "heading": "Mettiti a tuo agio.",
@@ -289,6 +310,13 @@
     "demoFollowupHint3": "Scegli una situazione reale e descrivi il tuo contributo.",
     "demoFollowup4": "Per un primo lavoro, imparare dagli errori può essere utile.\n\nRacconta qualcosa che non è andato come previsto e che cosa hai imparato.",
     "demoFollowupHint4": "Spiega che cosa hai provato e che cosa faresti diversamente.",
-    "demoWrap": "Questa demo ha esaurito le domande di esempio. Scegli Ottieni riepilogo per concludere con un riassunto della pratica."
+    "demoWrap": "Questa demo ha esaurito le domande di esempio. Scegli Ottieni riepilogo per concludere con un riassunto della pratica.",
+    "stage_introduction": "Presentazione",
+    "stage_motivation": "Motivazione",
+    "stage_strengths_weaknesses": "Punti di forza e debolezze",
+    "stage_situational": "Situazioni",
+    "stage_candidate_questions": "Le tue domande",
+    "stage_closing": "Conclusione",
+    "stage_feedback": "Feedback"
   }
 }

@@ -1,0 +1,353 @@
+{
+  "language": "it",
+  "rubric": [
+    {
+      "key": "clarity",
+      "meaning": "Comprensibilità, struttura e filo logico delle risposte",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Risposte confuse, incomplete o difficili da capire"
+        },
+        {
+          "score": 2,
+          "anchor": "Idea principale riconoscibile, ma risposta disordinata o dispersiva"
+        },
+        {
+          "score": 3,
+          "anchor": "Espressione chiara e filo logico riconoscibile"
+        },
+        {
+          "score": 4,
+          "anchor": "Risposta precisa, strutturata e mirata"
+        }
+      ]
+    },
+    {
+      "key": "relevance",
+      "meaning": "La risposta corrisponde alla domanda e all’apprendistato desiderato?",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Risposta fuori tema"
+        },
+        {
+          "score": 2,
+          "anchor": "Risposta in parte pertinente, con dettagli secondari inutili"
+        },
+        {
+          "score": 3,
+          "anchor": "Risposta chiaramente collegata alla domanda"
+        },
+        {
+          "score": 4,
+          "anchor": "Risposta mirata e collegata anche all’apprendistato"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "meaning": "Interesse autentico riconoscibile per la professione e l’azienda",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Nessun interesse riconoscibile, frasi vuote"
+        },
+        {
+          "score": 2,
+          "anchor": "Interesse presente ma poco motivato"
+        },
+        {
+          "score": 3,
+          "anchor": "Motivazione spiegata in modo comprensibile"
+        },
+        {
+          "score": 4,
+          "anchor": "Motivazione personale, motivata e collegata al futuro"
+        }
+      ]
+    },
+    {
+      "key": "self_reflection",
+      "meaning": "Capacità di valutare realisticamente punti di forza, debolezze ed esperienze",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Autovalutazione assente o irrealistica"
+        },
+        {
+          "score": 2,
+          "anchor": "Debolezza citata senza riflessione o passo di apprendimento"
+        },
+        {
+          "score": 3,
+          "anchor": "Autovalutazione realistica con un percorso di apprendimento"
+        },
+        {
+          "score": 4,
+          "anchor": "Valutazione riflessiva con azione concreta e relativo effetto"
+        }
+      ]
+    },
+    {
+      "key": "communication",
+      "meaning": "Espressione, scelta delle parole, tono e ascolto attivo",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Tono scortese, troppo informale o inadeguato"
+        },
+        {
+          "score": 2,
+          "anchor": "Espressione comprensibile ma esitante o troppo breve"
+        },
+        {
+          "score": 3,
+          "anchor": "Espressione adeguata, cordiale e chiara"
+        },
+        {
+          "score": 4,
+          "anchor": "Espressione sicura, adatta alla situazione e attenta all’interlocutore"
+        }
+      ]
+    },
+    {
+      "key": "concrete_examples",
+      "meaning": "Affermazioni sostenute da esperienze o situazioni reali",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Solo affermazioni generiche senza prove"
+        },
+        {
+          "score": 2,
+          "anchor": "Esempio presente ma vago"
+        },
+        {
+          "score": 3,
+          "anchor": "Esempio concreto e comprensibile"
+        },
+        {
+          "score": 4,
+          "anchor": "Esempio con situazione, azione e risultato"
+        }
+      ]
+    },
+    {
+      "key": "demeanor",
+      "meaning": "Cortesia, sicurezza, tono e linguaggio del corpo se osservabile",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Impressione di insicurezza, scortesia o distanza"
+        },
+        {
+          "score": 2,
+          "anchor": "Cortesia di base, ma nervosismo o riservatezza"
+        },
+        {
+          "score": 3,
+          "anchor": "Atteggiamento cordiale, attento e adeguatamente sicuro"
+        },
+        {
+          "score": 4,
+          "anchor": "Atteggiamento disinvolto, disponibile e positivo"
+        }
+      ]
+    },
+    {
+      "key": "preparation",
+      "meaning": "Conoscenza dell’azienda formatrice, della professione e dei requisiti",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Nessuna informazione sull’azienda o sulla professione"
+        },
+        {
+          "score": 2,
+          "anchor": "Conoscenze di base ma superficiali"
+        },
+        {
+          "score": 3,
+          "anchor": "Azienda e professione conosciute"
+        },
+        {
+          "score": 4,
+          "anchor": "Conoscenze solide portate attivamente nel colloquio"
+        }
+      ]
+    },
+    {
+      "key": "goal_orientation",
+      "meaning": "Chiarezza della scelta professionale e delle prospettive a lungo termine",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Nessuna idea sul futuro o sulla scelta professionale"
+        },
+        {
+          "score": 2,
+          "anchor": "Idea vaga senza chiaro legame con l’apprendistato"
+        },
+        {
+          "score": 3,
+          "anchor": "Obiettivo chiaro coerente con l’apprendistato"
+        },
+        {
+          "score": 4,
+          "anchor": "Obiettivo chiaro con prospettiva a lungo termine"
+        }
+      ]
+    },
+    {
+      "key": "difficult_questions",
+      "meaning": "Reazione a domande critiche, inattese o scomode",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Blocco, evasione o atteggiamento difensivo"
+        },
+        {
+          "score": 2,
+          "anchor": "Risposta presente, ma impressione di essere sopraffatti"
+        },
+        {
+          "score": 3,
+          "anchor": "Risposta calma e concreta"
+        },
+        {
+          "score": 4,
+          "anchor": "Gestione sicura e costruttiva, eventualmente con un apprendimento"
+        }
+      ]
+    },
+    {
+      "key": "initiative",
+      "meaning": "Domande proprie e sensate all’azienda alla fine del colloquio",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Nessuna domanda alla fine"
+        },
+        {
+          "score": 2,
+          "anchor": "Domanda presente ma generica"
+        },
+        {
+          "score": 3,
+          "anchor": "Domanda che mostra interesse autentico"
+        },
+        {
+          "score": 4,
+          "anchor": "Domanda che mostra preparazione e lungimiranza"
+        }
+      ]
+    }
+  ],
+  "guidelines": [
+    {
+      "id": "T1",
+      "text": "Apprezzamento e incoraggiamento, mai condiscendenza o ironia."
+    },
+    {
+      "id": "T2",
+      "text": "Parla alla pari, come un coach di sostegno, non come un insegnante che assegna voti."
+    },
+    {
+      "id": "T3",
+      "text": "Niente elogi esagerati (« perfetto », « geniale ») o drammatizzazioni (« era brutto »)."
+    },
+    {
+      "id": "S1",
+      "text": "Frasi chiare e semplici, senza termini psicologici o delle risorse umane non spiegati."
+    },
+    {
+      "id": "S2",
+      "text": "Usa la forma attiva invece della passiva."
+    },
+    {
+      "id": "S3",
+      "text": "Usa frasi brevi."
+    },
+    {
+      "id": "S4",
+      "text": "[Aggiunta multilingue] Feedback nella lingua del colloquio; per il dialetto svizzero tedesco, usa tedesco standard."
+    },
+    {
+      "id": "R1",
+      "text": "Prima i punti di forza, poi le possibilità di miglioramento."
+    },
+    {
+      "id": "R2",
+      "text": "Al massimo uno o due punti principali per criterio."
+    },
+    {
+      "id": "R3",
+      "text": "Concludi sempre con un passo concreto e fattibile."
+    },
+    {
+      "id": "B1",
+      "text": "Valuta il comportamento o la risposta osservati, mai la persona nel suo complesso."
+    },
+    {
+      "id": "B2",
+      "text": "Non dire « Sei insicuro ». Di’ : « La tua voce si è abbassata a questa domanda; questo può indicare incertezza. » Solo se il cambiamento è stato osservato."
+    },
+    {
+      "id": "B3",
+      "text": "Nessuna diagnosi o etichetta caratteriale (« introverso », « poco motivato », « timido »)."
+    },
+    {
+      "id": "E1",
+      "text": "Presenta gli errori come occasioni di apprendimento, non come difetti."
+    },
+    {
+      "id": "E2",
+      "text": "Usa « non ancora » invece di « non »."
+    },
+    {
+      "id": "E3",
+      "text": "Aspettative realistiche per l’età: un quindicenne non deve parlare come un professionista esperto."
+    },
+    {
+      "id": "M1",
+      "text": "Non penalizzare nervosismo, lapsus o pause."
+    },
+    {
+      "id": "M2",
+      "text": "Per risposte molto deboli, incoraggia senza nascondere o minimizzare la debolezza."
+    },
+    {
+      "id": "K1",
+      "text": "Sostieni ogni commento con una citazione o un riferimento a un momento concreto del dialogo."
+    },
+    {
+      "id": "K2",
+      "text": "Consigli concretamente applicabili, non vaghi come « mostra più sicurezza »."
+    },
+    {
+      "id": "K3",
+      "text": "Non valutare senza prove. Dichiara gli elementi mancanti invece di indovinare. Non inventare nulla."
+    },
+    {
+      "id": "L1",
+      "text": "Non giudicare aspetto, voce (salvo rispetto al nervosismo), famiglia o tratti della personalità."
+    },
+    {
+      "id": "L2",
+      "text": "Non generare paura, neppure implicitamente."
+    },
+    {
+      "id": "L3",
+      "text": "In caso di forte insicurezza o dubbi su di sé, offri sostegno e, se opportuno, indirizza a una persona reale: orientatore, genitori o insegnante."
+    },
+    {
+      "id": "L4",
+      "text": "Nessun confronto con altri giovani o con un candidato ideale."
+    },
+    {
+      "id": "A1",
+      "text": "Concludi con una frase incoraggiante che ricorda il carattere di esercitazione."
+    }
+  ]
+}

@@ -1,0 +1,353 @@
+{
+  "language": "de",
+  "rubric": [
+    {
+      "key": "clarity",
+      "meaning": "Verständlichkeit, Struktur und Nachvollziehbarkeit der Antworten",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Antworten sind wirr, unvollständig oder schwer verständlich"
+        },
+        {
+          "score": 2,
+          "anchor": "Grundgedanke erkennbar, aber unstrukturiert oder abschweifend"
+        },
+        {
+          "score": 3,
+          "anchor": "Klar formuliert, roter Faden erkennbar"
+        },
+        {
+          "score": 4,
+          "anchor": "Präzise, strukturiert, auf den Punkt gebracht"
+        }
+      ]
+    },
+    {
+      "key": "relevance",
+      "meaning": "Passt die Antwort zur gestellten Frage und zur angestrebten Lehrstelle?",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Antwort geht am Thema vorbei"
+        },
+        {
+          "score": 2,
+          "anchor": "Teilweise passend, enthält aber unnötige Nebeninfos"
+        },
+        {
+          "score": 3,
+          "anchor": "Antwort bezieht sich klar auf die Frage"
+        },
+        {
+          "score": 4,
+          "anchor": "Antwort ist zielgerichtet und stellt zusätzlich den Bezug zur Lehrstelle her"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "meaning": "Erkennbares echtes Interesse am Beruf und am Betrieb",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Kein erkennbares Interesse, floskelhafte Aussagen"
+        },
+        {
+          "score": 2,
+          "anchor": "Interesse vorhanden, aber wenig begründet"
+        },
+        {
+          "score": 3,
+          "anchor": "Motivation wird nachvollziehbar begründet"
+        },
+        {
+          "score": 4,
+          "anchor": "Motivation ist persönlich, begründet und mit Zukunftsbezug verknüpft"
+        }
+      ]
+    },
+    {
+      "key": "self_reflection",
+      "meaning": "Fähigkeit, eigene Stärken, Schwächen und Erfahrungen realistisch einzuschätzen",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Keine Selbsteinschätzung möglich oder unrealistisch"
+        },
+        {
+          "score": 2,
+          "anchor": "Schwäche wird genannt, aber ohne Einsicht oder Lernschritt"
+        },
+        {
+          "score": 3,
+          "anchor": "Realistische Selbsteinschätzung mit Lernansatz"
+        },
+        {
+          "score": 4,
+          "anchor": "Reflektierte Einschätzung inkl. konkreter Massnahme und Wirkung"
+        }
+      ]
+    },
+    {
+      "key": "communication",
+      "meaning": "Ausdrucksweise, Wortwahl, Tonfall, aktives Zuhören",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Unhöflicher, zu lockerer oder unpassender Ton"
+        },
+        {
+          "score": 2,
+          "anchor": "Verständlich, aber unsicher oder zu knapp"
+        },
+        {
+          "score": 3,
+          "anchor": "Angemessener, freundlicher und klarer Ausdruck"
+        },
+        {
+          "score": 4,
+          "anchor": "Sicher, angemessen und situativ passend, geht auf Gesprächspartner ein"
+        }
+      ]
+    },
+    {
+      "key": "concrete_examples",
+      "meaning": "Aussagen werden mit echten Erlebnissen/Situationen belegt statt nur behauptet",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Nur allgemeine Behauptungen ohne Beleg"
+        },
+        {
+          "score": 2,
+          "anchor": "Beispiel wird genannt, aber vage"
+        },
+        {
+          "score": 3,
+          "anchor": "Konkretes, nachvollziehbares Beispiel"
+        },
+        {
+          "score": 4,
+          "anchor": "Beispiel inkl. Situation, Handlung und Ergebnis"
+        }
+      ]
+    },
+    {
+      "key": "demeanor",
+      "meaning": "Höflichkeit, Selbstsicherheit, Umgangston, Körpersprache (sofern erfassbar)",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Unsicher, unhöflich oder distanziert wirkend"
+        },
+        {
+          "score": 2,
+          "anchor": "Grundsätzlich höflich, aber nervös oder zurückhaltend"
+        },
+        {
+          "score": 3,
+          "anchor": "Freundlich, aufmerksam, angemessen selbstsicher"
+        },
+        {
+          "score": 4,
+          "anchor": "Souverän, zugewandt, positive Ausstrahlung"
+        }
+      ]
+    },
+    {
+      "key": "preparation",
+      "meaning": "Wissen über den Lehrbetrieb, den Beruf und die Anforderungen",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Keine Informationen über Betrieb/Beruf vorhanden"
+        },
+        {
+          "score": 2,
+          "anchor": "Grundwissen vorhanden, aber oberflächlich"
+        },
+        {
+          "score": 3,
+          "anchor": "Betrieb und Berufsbild sind bekannt"
+        },
+        {
+          "score": 4,
+          "anchor": "Fundiertes Wissen, das aktiv ins Gespräch eingebracht wird"
+        }
+      ]
+    },
+    {
+      "key": "goal_orientation",
+      "meaning": "Klarheit über Berufswahl und langfristige Vorstellungen",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Keine Vorstellung von Zukunft oder Berufswahl"
+        },
+        {
+          "score": 2,
+          "anchor": "Vage Vorstellung ohne klaren Bezug zur Lehrstelle"
+        },
+        {
+          "score": 3,
+          "anchor": "Klares Ziel, das zur Lehrstelle passt"
+        },
+        {
+          "score": 4,
+          "anchor": "Klares Ziel mit langfristiger Perspektive"
+        }
+      ]
+    },
+    {
+      "key": "difficult_questions",
+      "meaning": "Reaktion auf kritische, unerwartete oder unangenehme Fragen",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Blockiert, ausweichend oder abwehrend"
+        },
+        {
+          "score": 2,
+          "anchor": "Reagiert, wirkt aber überfordert"
+        },
+        {
+          "score": 3,
+          "anchor": "Bleibt ruhig und antwortet sachlich"
+        },
+        {
+          "score": 4,
+          "anchor": "Souveräner, konstruktiver Umgang, ggf. mit positivem Lerneffekt"
+        }
+      ]
+    },
+    {
+      "key": "initiative",
+      "meaning": "Werden am Ende eigene, sinnvolle Fragen an den Betrieb gestellt?",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Keine Fragen am Ende des Gesprächs"
+        },
+        {
+          "score": 2,
+          "anchor": "Frage wird gestellt, ist aber generisch"
+        },
+        {
+          "score": 3,
+          "anchor": "Frage zeigt echtes Interesse"
+        },
+        {
+          "score": 4,
+          "anchor": "Frage zeigt Vorbereitung und Weitblick"
+        }
+      ]
+    }
+  ],
+  "guidelines": [
+    {
+      "id": "T1",
+      "text": "Wertschätzend und ermutigend, nie herablassend oder ironisch."
+    },
+    {
+      "id": "T2",
+      "text": "Auf Augenhöhe sprechen – nicht wie ein Lehrer, der eine Note verteilt, sondern wie ein unterstützender Coach."
+    },
+    {
+      "id": "T3",
+      "text": "Keine Übertreibung ins Positive («perfekt», «genial») und keine Dramatisierung ins Negative («das war schlecht», «das geht gar nicht»)."
+    },
+    {
+      "id": "S1",
+      "text": "Klare, einfache Sätze; keine Fachbegriffe aus Personalwesen oder Psychologie ohne Erklärung (z. B. «geringe Selbstwirksamkeit»)."
+    },
+    {
+      "id": "S2",
+      "text": "Aktive Sprache statt Passiv («Du hast gut erklärt, wie …» statt «Es wurde gut erklärt, dass …»)."
+    },
+    {
+      "id": "S3",
+      "text": "Kurze Sätze."
+    },
+    {
+      "id": "S4",
+      "text": "[Ergänzung, nicht im FHGR-Original] Feedback in der Sprache des Gesprächs geben (de/fr/it; bei Mundart: Standarddeutsch)."
+    },
+    {
+      "id": "R1",
+      "text": "Stärken zuerst nennen, dann Verbesserungspotenzial."
+    },
+    {
+      "id": "R2",
+      "text": "Pro Kriterium maximal 1–2 zentrale Punkte, nicht alles gleichzeitig aufzählen."
+    },
+    {
+      "id": "R3",
+      "text": "Immer mit einem konkreten, machbaren nächsten Schritt abschliessen («Was du beim nächsten Mal ausprobieren kannst …»)."
+    },
+    {
+      "id": "B1",
+      "text": "Feedback bezieht sich immer auf das gezeigte Verhalten oder die Antwort, nie auf die Person als Ganzes."
+    },
+    {
+      "id": "B2",
+      "text": "Nicht: «Du bist unsicher.» Sondern: «Deine Stimme wurde bei dieser Frage leiser – das kann auf Unsicherheit hindeuten.»"
+    },
+    {
+      "id": "B3",
+      "text": "Keine Diagnosen oder Charakterzuschreibungen («introvertiert», «wenig motiviert», «schüchtern»)."
+    },
+    {
+      "id": "E1",
+      "text": "Wachstumsdenken fördern: Fehler als Lernchance rahmen, nicht als Makel."
+    },
+    {
+      "id": "E2",
+      "text": "Formulierungen wie «noch nicht» statt «nicht» verwenden."
+    },
+    {
+      "id": "E3",
+      "text": "Realistische, alterstypische Erwartungen ansetzen – ein 15-Jähriger im ersten Bewerbungsgespräch muss nicht wie ein erfahrener Berufsmann klingen."
+    },
+    {
+      "id": "M1",
+      "text": "Nervosität, Versprecher oder Pausen nicht negativ bewerten."
+    },
+    {
+      "id": "M2",
+      "text": "Bei besonders schwachen Antworten trotzdem einen ermutigenden Rahmen setzen, ohne die Schwäche zu beschönigen oder zu verschweigen."
+    },
+    {
+      "id": "K1",
+      "text": "Jede Rückmeldung mit einem Zitat oder Verweis auf eine konkrete Stelle im Gespräch belegen."
+    },
+    {
+      "id": "K2",
+      "text": "Verbesserungstipps müssen konkret umsetzbar sein, keine vagen Ratschläge («mehr Selbstbewusstsein zeigen» ist zu abstrakt)."
+    },
+    {
+      "id": "K3",
+      "text": "Bewerte nie ohne Beleg aus dem Gespräch; fehlt eine Aussage, dies offen sagen statt raten. Nichts erfinden."
+    },
+    {
+      "id": "L1",
+      "text": "Keine Bewertung von Aussehen, Stimme (ausser im Kontext von Nervosität), familiärem Hintergrund oder Persönlichkeitsmerkmalen."
+    },
+    {
+      "id": "L2",
+      "text": "Keine Angst erzeugen («So wirst du nie eine Lehrstelle finden») – auch nicht implizit."
+    },
+    {
+      "id": "L3",
+      "text": "Bei Anzeichen von grosser Verunsicherung oder Selbstzweifeln: unterstützend reagieren und ggf. auf eine reale Bezugsperson (Berufsberater/in, Eltern, Lehrperson) verweisen."
+    },
+    {
+      "id": "L4",
+      "text": "Keine Vergleiche mit anderen Jugendlichen oder einem «idealen» Kandidaten."
+    },
+    {
+      "id": "A1",
+      "text": "Immer mit einem stärkenden, motivierenden Satz enden, der den Übungscharakter betont."
+    }
+  ]
+}

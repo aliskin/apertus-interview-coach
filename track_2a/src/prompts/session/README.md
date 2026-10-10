@@ -1,0 +1,13 @@
+# Complete interview prompts
+
+The session controller selects one prompt language for the whole interview. German, French and Italian use `interviewer.de.txt` / `feedback.de.txt`, `interviewer.fr.txt` / `feedback.fr.txt`, and `interviewer.it.txt` / `feedback.it.txt`. The original English `interviewer.txt` and `feedback.txt` are preserved and still used for English sessions.
+
+`interviewer.*.txt` governs ongoing interview turns. The controller adds public posting facts, the current question/stage/subtype, the next bank question and follow-up permission. Only the selected language’s question wording is included, excluding unused translations, dialect variants and provenance. The selection and progression logic is unchanged. No reference annotations, simulation persona, coach targets or scenario success criteria are supplied.
+
+`feedback.*.txt` governs the final feedback call. `guidance.<language>.json` supplies the compact eleven-criterion rubric, its four score anchors and all 26 feedback guidelines in the selected language. German and English descriptions come from the supplied resources; French and Italian are assistant-authored translations for review. The authoritative source resources in `data/interview/` remain unchanged. No reference answer examples are included.
+
+`instructions.json` localises the controller context label, task reminder, feedback evidence instructions and bounded correction request. All generated prose values, including the internal reason, are requested in the interview language. Technical JSON keys, criterion/rule IDs and state enums remain unchanged for validation. Company facts and candidate excerpts retain their original wording; this is instruction localisation, not translation of source inputs.
+
+Code owns main-question selection, progression, counts, termination and German/French/Italian bank wording. The thirteen default English questions have explicit translations; Apertus can adapt English questions. Each response has at most one validation correction. After two invalid interviewer outputs, code can use a neutral acknowledgement and exact bank question. Failed final feedback is not fabricated. Quotes are checked for presence, not semantic entailment.
+
+All attempts are recorded locally. Experimental simulator requests are counted separately. Runtime sessions and evaluation outputs remain Git-ignored. No new examples, decomposition steps, calls, scoring rules or follow-up policy were introduced by localisation. Inference has not been run with these translated prompts; previous runs and manual reviews remain historical results of the previous prompt setup.

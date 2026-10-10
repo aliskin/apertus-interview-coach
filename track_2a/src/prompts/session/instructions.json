@@ -1,0 +1,42 @@
+{
+  "de": {
+    "context": "Kontext der Gesprächssteuerung:",
+    "task": "AUFTRAG DER STEUERUNG (keine Aussage der bewerbenden Person):",
+    "language": "Sprache: Deutsch (Standarddeutsch)",
+    "rubric": "Öffentliche Bewertungsgrundlage:",
+    "guidelines": "Feedback-Leitlinien:",
+    "quotes": "Verwende als Belege NUR diese Auszüge aus den Antworten (leere Zeichenfolge bedeutet nicht beurteilbar):",
+    "keys": "Gib criteria als Objekt mit genau diesen 11 Schlüsseln zurück:",
+    "correction": "Gib korrigiertes JSON zurück. Die vorige Ausgabe war ungültig. Prüfe Schema, erlaubte Nachfragen und exakte Belege. Behalte die ursprüngliche Aufgabe bei. Erfinde keine Belege."
+  },
+  "fr": {
+    "context": "Contexte du contrôleur de l’entretien :",
+    "task": "TÂCHE DU CONTRÔLEUR (ceci n’est pas une réponse du candidat) :",
+    "language": "Langue : français",
+    "rubric": "Grille publique d’évaluation :",
+    "guidelines": "Consignes de feedback :",
+    "quotes": "Utilise UNIQUEMENT ces extraits des réponses comme preuves (une chaîne vide signifie non évalué) :",
+    "keys": "Renvoie criteria comme objet avec exactement ces 11 clés :",
+    "correction": "Renvoie un JSON corrigé. La sortie précédente était invalide. Vérifie le schéma, les relances autorisées et les citations exactes. Garde la tâche initiale. N’invente aucune preuve."
+  },
+  "it": {
+    "context": "Contesto del controllore del colloquio:",
+    "task": "COMPITO DEL CONTROLLORE (non è una risposta del candidato):",
+    "language": "Lingua: italiano",
+    "rubric": "Griglia pubblica di valutazione:",
+    "guidelines": "Linee guida per il feedback:",
+    "quotes": "Usa SOLO questi estratti delle risposte come prove (una stringa vuota significa non valutato):",
+    "keys": "Restituisci criteria come oggetto con esattamente queste 11 chiavi:",
+    "correction": "Restituisci JSON corretto. L’output precedente non era valido. Controlla schema, approfondimenti consentiti e citazioni esatte. Mantieni il compito originale. Non inventare prove."
+  },
+  "en": {
+    "context": "Controller context:",
+    "task": "CONTROLLER TASK (not candidate speech):",
+    "language": "Language: English",
+    "rubric": "Public rubric:",
+    "guidelines": "Guidelines:",
+    "quotes": "Use evidence ONLY from these allowed candidate excerpts (empty string means not assessed):",
+    "keys": "Return criteria as an object with exactly these 11 keys:",
+    "correction": "Return corrected JSON. The previous output was invalid. Check the schema, permitted follow-ups and exact evidence. Preserve the original task; do not invent evidence."
+  }
+}

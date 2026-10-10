@@ -56,11 +56,11 @@ def ollama(model, messages, schema=None, max_tokens=2048, num_ctx=None):
     return content
 
 
-def apertus(messages, schema=None):
+def apertus(messages, schema=None, max_tokens=600):
     key, model, base = (os.getenv(name) for name in ('LLM_API_KEY', 'LLM_NAME', 'LLM_BASE_URL'))
     if not all((key, model, base)):
         raise ValueError('Set LLM_API_KEY, LLM_NAME, and LLM_BASE_URL.')
-    body = {'model': model, 'messages': messages, 'temperature': 0, 'max_tokens': 600}
+    body = {'model': model, 'messages': messages, 'temperature': 0, 'max_tokens': max_tokens}
     if schema is not None:
         body['response_format'] = {'type': 'json_schema', 'json_schema': {
             'name': 'coach_response', 'strict': True, 'schema': schema}}

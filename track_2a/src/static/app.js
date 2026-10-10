@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id);
 let transcript = [], config, busy = false, complete = false, language = 'en', scenario = 'it', canContinue = true, suggestRecap = false;
-let locales;
+let locales, sessionId = null, sessionRevision = 0, sessionState = null;
 const t = key => locales[language][key];
 function translate() {
   document.documentElement.lang = language;
@@ -35,14 +35,23 @@ function bubble(role, content) {
   const text = document.createElement('p'); text.textContent = content;
   card.append(label, text); $('conversation').append(card);
 }
-function reset() {
+async function reset() {
+  busy = true; sessionId = null; sessionRevision = 0;
   transcript = [{role: 'assistant', content: config.scenarios[scenario].translations[language].opening}]; complete = false; canContinue = true; suggestRecap = false;
   $('conversation').replaceChildren(); bubble('assistant', transcript[0].content);
   $('answer-form').hidden = false; $('finished').hidden = true; $('answer').value = ''; $('status').textContent = ''; $('answer-help').open = false; $('answer-hint').textContent = t('openingHint'); update();
+  try {
+    const response = await fetch('/api/session/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language,scenario})});
+    const data = await response.json(); if (!response.ok) throw new Error(data.error);
+    sessionId = data.session_id; sessionState = data.state; config.max_answers = data.max_answers;
+    transcript = [{role:'assistant',content:data.opening}]; $('conversation').replaceChildren(); bubble('assistant',data.opening);
+  } catch(error) { $('status').textContent = t('error'); }
+  finally { busy = false; update(); }
 }
 function update() {
   const answers = transcript.filter(x => x.role === 'user').length;
   $('progress').textContent = complete ? t('complete') : !canContinue ? t('recapReady') : t('question').replace('{n}', answers + 1);
+  if (sessionState && !complete) $('progress').textContent += ' · ' + t('stage_' + sessionState.current_stage);
   const phase = complete ? 2 : answers > 0 ? 1 : 0;
   [...$('steps').children].forEach((li, i) => {
     li.className = complete || i < phase ? 'done' : i === phase ? 'active' : '';
@@ -66,16 +75,17 @@ function update() {
 }
 $('answer').addEventListener('input', update);
 async function submitToCoach(recap = false) {
-  if (busy || complete) return;
+  if (busy || complete || !sessionId) return;
   const answer = $('answer').value.trim();
   if ((!recap && !answer) || (recap && !answer && !transcript.some(item => item.role === 'user'))) return;
   const pending = answer ? [...transcript, {role: 'user', content: answer}] : [...transcript];
   busy = true; $('status').textContent = t(recap ? 'recapping' : 'thinking'); update();
   try {
-    const response = await fetch(recap ? '/api/recap' : '/api/answer', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({transcript: pending, language, scenario})});
+    const response = await fetch(recap ? '/api/recap' : '/api/answer', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({session_id:sessionId,revision:sessionRevision,answer,language,scenario})});
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
     transcript = [...pending, {role: 'assistant', content: data.reply}]; if (answer) bubble('user', answer); bubble('assistant', data.reply);
     $('answer').value = ''; $('answer-hint').textContent = data.hint || t('genericHint');
+    sessionRevision = data.state.answers; sessionState = data.state;
     complete = data.complete; canContinue = data.can_continue; suggestRecap = data.suggest_recap;
     $('finished').hidden = !complete; $('status').textContent = '';
   } catch (error) { $('status').textContent = t('error'); }

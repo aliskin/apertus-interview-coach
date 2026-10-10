@@ -1,0 +1,353 @@
+{
+  "language": "fr",
+  "rubric": [
+    {
+      "key": "clarity",
+      "meaning": "Compréhensibilité, structure et logique des réponses",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Réponses confuses, incomplètes ou difficiles à comprendre"
+        },
+        {
+          "score": 2,
+          "anchor": "Idée principale reconnaissable, mais réponse peu structurée ou digressive"
+        },
+        {
+          "score": 3,
+          "anchor": "Formulation claire et fil conducteur reconnaissable"
+        },
+        {
+          "score": 4,
+          "anchor": "Réponse précise, structurée et allant à l’essentiel"
+        }
+      ]
+    },
+    {
+      "key": "relevance",
+      "meaning": "La réponse correspond-elle à la question et à l’apprentissage visé ?",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Réponse hors sujet"
+        },
+        {
+          "score": 2,
+          "anchor": "Réponse partiellement adaptée, avec des informations secondaires inutiles"
+        },
+        {
+          "score": 3,
+          "anchor": "Réponse clairement liée à la question"
+        },
+        {
+          "score": 4,
+          "anchor": "Réponse ciblée, également reliée à l’apprentissage"
+        }
+      ]
+    },
+    {
+      "key": "motivation",
+      "meaning": "Intérêt réel et reconnaissable pour le métier et l’entreprise",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Aucun intérêt reconnaissable, formules creuses"
+        },
+        {
+          "score": 2,
+          "anchor": "Intérêt présent mais peu justifié"
+        },
+        {
+          "score": 3,
+          "anchor": "Motivation justifiée de façon compréhensible"
+        },
+        {
+          "score": 4,
+          "anchor": "Motivation personnelle, justifiée et liée à l’avenir"
+        }
+      ]
+    },
+    {
+      "key": "self_reflection",
+      "meaning": "Capacité à estimer de façon réaliste ses forces, faiblesses et expériences",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Autoévaluation absente ou irréaliste"
+        },
+        {
+          "score": 2,
+          "anchor": "Faiblesse citée sans prise de recul ni étape d’apprentissage"
+        },
+        {
+          "score": 3,
+          "anchor": "Autoévaluation réaliste avec une démarche d’apprentissage"
+        },
+        {
+          "score": 4,
+          "anchor": "Évaluation réfléchie avec une mesure concrète et son effet"
+        }
+      ]
+    },
+    {
+      "key": "communication",
+      "meaning": "Expression, choix des mots, ton et écoute active",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Ton impoli, trop familier ou inadapté"
+        },
+        {
+          "score": 2,
+          "anchor": "Expression compréhensible mais hésitante ou trop brève"
+        },
+        {
+          "score": 3,
+          "anchor": "Expression adaptée, aimable et claire"
+        },
+        {
+          "score": 4,
+          "anchor": "Expression assurée, adaptée à la situation et attentive à l’interlocuteur"
+        }
+      ]
+    },
+    {
+      "key": "concrete_examples",
+      "meaning": "Affirmations étayées par des expériences ou situations réelles",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Affirmations générales sans preuve"
+        },
+        {
+          "score": 2,
+          "anchor": "Exemple donné mais vague"
+        },
+        {
+          "score": 3,
+          "anchor": "Exemple concret et compréhensible"
+        },
+        {
+          "score": 4,
+          "anchor": "Exemple avec situation, action et résultat"
+        }
+      ]
+    },
+    {
+      "key": "demeanor",
+      "meaning": "Politesse, assurance, ton et langage corporel si observable",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Impression d’insécurité, d’impolitesse ou de distance"
+        },
+        {
+          "score": 2,
+          "anchor": "Politesse de base, mais nervosité ou réserve"
+        },
+        {
+          "score": 3,
+          "anchor": "Attitude aimable, attentive et suffisamment assurée"
+        },
+        {
+          "score": 4,
+          "anchor": "Attitude maîtrisée, ouverte et positive"
+        }
+      ]
+    },
+    {
+      "key": "preparation",
+      "meaning": "Connaissance de l’entreprise formatrice, du métier et des exigences",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Aucune information sur l’entreprise ou le métier"
+        },
+        {
+          "score": 2,
+          "anchor": "Connaissances de base superficielles"
+        },
+        {
+          "score": 3,
+          "anchor": "Entreprise et métier connus"
+        },
+        {
+          "score": 4,
+          "anchor": "Connaissances solides activement intégrées au dialogue"
+        }
+      ]
+    },
+    {
+      "key": "goal_orientation",
+      "meaning": "Clarté du choix professionnel et des perspectives à long terme",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Aucune idée de l’avenir ou du choix professionnel"
+        },
+        {
+          "score": 2,
+          "anchor": "Idée vague sans lien clair avec l’apprentissage"
+        },
+        {
+          "score": 3,
+          "anchor": "Objectif clair correspondant à l’apprentissage"
+        },
+        {
+          "score": 4,
+          "anchor": "Objectif clair avec perspective à long terme"
+        }
+      ]
+    },
+    {
+      "key": "difficult_questions",
+      "meaning": "Réaction aux questions critiques, imprévues ou inconfortables",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Blocage, évitement ou réaction défensive"
+        },
+        {
+          "score": 2,
+          "anchor": "Réponse donnée, mais impression d’être dépassé"
+        },
+        {
+          "score": 3,
+          "anchor": "Réponse calme et factuelle"
+        },
+        {
+          "score": 4,
+          "anchor": "Réaction maîtrisée et constructive, éventuellement avec un apprentissage"
+        }
+      ]
+    },
+    {
+      "key": "initiative",
+      "meaning": "Questions personnelles et pertinentes à l’entreprise en fin d’entretien",
+      "levels": [
+        {
+          "score": 1,
+          "anchor": "Aucune question à la fin"
+        },
+        {
+          "score": 2,
+          "anchor": "Question posée mais générique"
+        },
+        {
+          "score": 3,
+          "anchor": "Question montrant un intérêt réel"
+        },
+        {
+          "score": 4,
+          "anchor": "Question montrant préparation et anticipation"
+        }
+      ]
+    }
+  ],
+  "guidelines": [
+    {
+      "id": "T1",
+      "text": "Bienveillant et encourageant, jamais condescendant ou ironique."
+    },
+    {
+      "id": "T2",
+      "text": "Parle d’égal à égal, comme un coach qui soutient, pas comme un enseignant qui distribue des notes."
+    },
+    {
+      "id": "T3",
+      "text": "Pas d’éloges exagérés (« parfait », « génial ») ni de dramatisation (« c’était mauvais »)."
+    },
+    {
+      "id": "S1",
+      "text": "Phrases claires et simples, sans jargon RH ou psychologique inexpliqué."
+    },
+    {
+      "id": "S2",
+      "text": "Utilise la voix active plutôt que passive."
+    },
+    {
+      "id": "S3",
+      "text": "Fais des phrases courtes."
+    },
+    {
+      "id": "S4",
+      "text": "[Ajout multilingue] Donne le feedback dans la langue de l’entretien ; pour un dialecte suisse allemand, utilise l’allemand standard."
+    },
+    {
+      "id": "R1",
+      "text": "Présente les forces avant les pistes d’amélioration."
+    },
+    {
+      "id": "R2",
+      "text": "Au maximum un ou deux points principaux par critère."
+    },
+    {
+      "id": "R3",
+      "text": "Termine toujours par une action concrète et réalisable."
+    },
+    {
+      "id": "B1",
+      "text": "Évalue le comportement ou la réponse observés, jamais la personne dans son ensemble."
+    },
+    {
+      "id": "B2",
+      "text": "Ne dis pas « Tu es peu sûr de toi ». Dis : « Ta voix est devenue plus basse à cette question ; cela peut indiquer une incertitude. » Seulement si ce changement a été observé."
+    },
+    {
+      "id": "B3",
+      "text": "Aucun diagnostic ni étiquette de caractère (« introverti », « peu motivé », « timide »)."
+    },
+    {
+      "id": "E1",
+      "text": "Présente les erreurs comme des occasions d’apprendre, pas comme des défauts."
+    },
+    {
+      "id": "E2",
+      "text": "Utilise « pas encore » plutôt que « pas »."
+    },
+    {
+      "id": "E3",
+      "text": "Attentes réalistes pour l’âge : une personne de 15 ans ne doit pas parler comme un professionnel expérimenté."
+    },
+    {
+      "id": "M1",
+      "text": "Ne pénalise pas nervosité, lapsus ou pauses."
+    },
+    {
+      "id": "M2",
+      "text": "Pour une réponse très faible, reste encourageant sans cacher ou minimiser la faiblesse."
+    },
+    {
+      "id": "K1",
+      "text": "Étaye chaque commentaire par une citation ou une référence à un moment concret du dialogue."
+    },
+    {
+      "id": "K2",
+      "text": "Conseils concrètement applicables, pas vagues comme « montre plus de confiance »."
+    },
+    {
+      "id": "K3",
+      "text": "Aucune évaluation sans preuve. Signale les éléments manquants au lieu de deviner. N’invente rien."
+    },
+    {
+      "id": "L1",
+      "text": "Ne juge ni apparence, ni voix (sauf concernant la nervosité), ni famille, ni traits de personnalité."
+    },
+    {
+      "id": "L2",
+      "text": "Ne crée jamais de peur, même implicitement."
+    },
+    {
+      "id": "L3",
+      "text": "En cas de forte insécurité ou de doutes sur soi, réponds avec soutien et, si nécessaire, oriente vers une personne réelle : conseiller, parents ou enseignant."
+    },
+    {
+      "id": "L4",
+      "text": "Aucune comparaison avec d’autres jeunes ou un candidat idéal."
+    },
+    {
+      "id": "A1",
+      "text": "Termine par une phrase encourageante qui rappelle le caractère d’entraînement."
+    }
+  ]
+}

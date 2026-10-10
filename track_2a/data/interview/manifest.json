@@ -1,0 +1,9 @@
+{
+  "source": "fhgr/Hackapertus datasets, local clone",
+  "sha256": {
+    "criteria.json": "a59e2adbc2f25fa98d417dc9d6c8c853c8d0116dd272a24d74bc9ff66a8b93cc",
+    "feedback_guidelines.json": "e1b848a49de193c7128699c485cb55ea7d39b9b297c69590553362f7cd5d7136",
+    "postings.jsonl": "2249df42658ff3db8ed07a7e4b420ab6638a22abfda9f9f89542cceb93316891",
+    "questions.jsonl": "b7e9e7ee693230738ea7a7deed489f1962bbea514a47f6aabd2aaddb170c3c8b"
+  }
+}
