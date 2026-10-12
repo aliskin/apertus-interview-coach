@@ -1,5 +1,6 @@
 """Dependency-free browser interface for short interview practice."""
 import argparse
+import re
 import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -145,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send(200, (STATIC / name).read_bytes(), mime)
 
     def do_POST(self):
-        if self.path not in ('/api/answer', '/api/recap', '/api/session/start'):
+        if self.path not in ('/api/answer', '/api/recap', '/api/session/start', '/api/revise'):
             return self.send(404, {'error': 'Not found'})
         # Same-origin requests only; the API never accepts credentials or endpoint URLs.
         if self.headers.get('Origin') not in (None, 'http://' + self.headers.get('Host', '')):
@@ -194,8 +195,16 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == '/api/session/start':
                 posting_id = {'it':'P-11','retail':'P-06','hospitality':'P-13','technical':'P-01','first-job':'P-03'}[scenario]
                 ids=['Q-01-01','Q-02-01','Q-03-01','Q-03-04','Q-04-04','Q-05-01','Q-05-03','Q-06-01','Q-07-01','Q-SIT-02','Q-08-02','Q-09-01','Q-10-01']
-                session=interview_controller.Session(language,interview_controller.POSTINGS[posting_id],interview_controller.make_plan(ids))
+                session=interview_controller.Session(language,interview_controller.POSTINGS[posting_id],interview_controller.make_plan(ids),pipeline=getattr(self.server,'pipeline','auto'),experience=payload.get('experience','first_interview'),difficulty=payload.get('difficulty','standard'))
                 session.provider=self.server.provider;session.model=self.server.model
+                previous=payload.get('previous_session_id')
+                if previous:
+                    if not isinstance(previous,str) or not re.fullmatch(r'[a-f0-9]{32}',previous):raise ValueError('Invalid previous session.')
+                    prior=self.server.sessions.get(previous)
+                    saved=interview_controller.ROOT/'data/sessions'/f'{previous}.json'
+                    if prior is None and saved.exists():prior=interview_controller.Session(**json.loads(saved.read_text()))
+                    if prior and prior.posting['id']==session.posting['id']:
+                        session.prior_learning_targets=[x for x in prior.practice_history if 'exercise' in x][-3:]
                 opening=session.start();identifier=uuid.uuid4().hex
                 self.server.sessions[identifier]=session
                 self.persist_session(identifier,session)
@@ -206,9 +215,16 @@ class Handler(BaseHTTPRequestHandler):
             original=self.server.sessions.get(identifier)
             if original is None:raise ValueError('Session not found. Start a new session.')
             if original.language!=language:raise ValueError('Session language cannot change.')
-            if payload.get('revision')!=original.answers:raise ValueError('Session changed. Reload before submitting again.')
-            if original.complete:raise ValueError('Session is complete. Start a new session.')
+            if payload.get('revision')!=original.answers+original.practice_answers:raise ValueError('Session changed. Reload before submitting again.')
+            if original.complete and self.path!='/api/revise':raise ValueError('Session is complete. Start a new session.')
             session=copy.deepcopy(original)
+            if self.path=='/api/revise':
+                try:result=session.revise(payload.get('answer',''))
+                except (ValueError,KeyError,TypeError,RuntimeError,OSError):
+                    original.model_calls=session.model_calls;original.requests=session.requests;self.persist_session(identifier,original);raise
+                result['speech']=voice.speech_output(result['reply'],language,identifier,session.answers+session.practice_answers,'feedback')
+                self.persist_session(identifier,session);self.server.sessions[identifier]=session
+                return self.send(200,result)
             if self.server.provider=='demo':
                 text=payload.get('answer','')
                 if not isinstance(text,str) or len(text)>4000:raise ValueError('Invalid answer.')

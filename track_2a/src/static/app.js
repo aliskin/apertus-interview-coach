@@ -1,5 +1,6 @@
 const $ = id => document.getElementById(id);
 let transcript = [], config, busy = false, complete = false, language = 'en', scenario = 'it', canContinue = true, suggestRecap = false;
+let canRevise = false;
 let locales, sessionId = null, sessionRevision = 0, sessionState = null;
 const t = key => locales[language][key];
 // Optional voice adapters listen for these events; text practice needs no adapter.
@@ -18,6 +19,7 @@ window.addEventListener('coach:transcription', event => {
   cancelVoice(); $('answer').value=input.text; update(); $('answer').focus();
 });
 function translate() {
+  $('hybrid-config').hidden = language !== 'de' || config.provider === 'demo';
   document.documentElement.lang = language;
   document.title = t('title');
   document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
@@ -52,14 +54,16 @@ function bubble(role, content) {
 }
 async function reset() {
   cancelVoice();
+  canRevise = false; $('revision-form').hidden = true; $('revision-answer').value = '';
   busy = true; sessionId = null; sessionRevision = 0;
   transcript = [{role: 'assistant', content: config.scenarios[scenario].translations[language].opening}]; complete = false; canContinue = true; suggestRecap = false;
   $('conversation').replaceChildren(); bubble('assistant', transcript[0].content);
   $('answer-form').hidden = false; $('finished').hidden = true; $('answer').value = ''; $('status').textContent = ''; $('answer-help').open = false; $('answer-hint').textContent = t('openingHint'); update();
   try {
-    const response = await fetch('/api/session/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language,scenario})});
+    const response = await fetch('/api/session/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language,scenario,experience:$("experience").value,difficulty:$("difficulty").value,previous_session_id:language === "de" ? localStorage.getItem("practice-last-"+scenario) : null})});
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
-    sessionId = data.session_id; sessionState = data.state; config.max_answers = data.max_answers;
+    sessionId = data.session_id; sessionState = data.state;
+    const prior = data.state.prior_learning_targets || []; $('prior-target').textContent = prior.length ? 'Aus deiner letzten Übung: ' + prior[prior.length-1].exercise : ''; $('prior-target').hidden = !prior.length; config.max_answers = data.max_answers;
     transcript = [{role:'assistant',content:data.opening}]; $('conversation').replaceChildren(); bubble('assistant',data.opening);
     publishVoice(data.speech);
   } catch(error) { $('status').textContent = t('error'); }
@@ -88,7 +92,7 @@ function update() {
   $('download').hidden = answers === 0;
   $('download').disabled = busy;
   $('conversation').setAttribute('aria-busy', String(busy));
-  $('send').disabled = busy || !$('answer').value.trim(); $('answer').disabled = busy; $('restart').disabled = busy; $('language').disabled = busy; $('scenario').disabled = busy;
+  $('send').disabled = busy || !$('answer').value.trim(); $('answer').disabled = busy; $('restart').disabled = busy; $('language').disabled = busy; $('scenario').disabled = busy; $('experience').disabled = busy || transcript.some(x => x.role === 'user'); $('difficulty').disabled = busy || transcript.some(x => x.role === 'user');
 }
 $('answer').addEventListener('input', update);
 async function submitToCoach(recap = false) {
@@ -103,7 +107,9 @@ async function submitToCoach(recap = false) {
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
     transcript = [...pending, {role: 'assistant', content: data.reply}]; if (answer) bubble('user', answer); bubble('assistant', data.reply);
     $('answer').value = ''; $('answer-hint').textContent = data.hint || t('genericHint');
-    sessionRevision = data.state.answers; sessionState = data.state;
+    sessionRevision = data.state.answers + (data.state.practice_answers || 0); sessionState = data.state;
+    canRevise = data.can_revise === true; $('revision-form').hidden = !canRevise;
+    if (data.complete && language === 'de') localStorage.setItem('practice-last-'+scenario,sessionId);
     complete = data.complete; canContinue = data.can_continue; suggestRecap = data.suggest_recap;
     publishVoice(data.speech);
     $('finished').hidden = !complete; $('status').textContent = '';
@@ -115,6 +121,19 @@ async function submitToCoach(recap = false) {
     if (!$('status').textContent) $('conversation').lastElementChild.scrollIntoView({block: 'start', behavior: 'instant'});
   }
 }
+$('revision-form').addEventListener('submit', async event => {
+  event.preventDefault(); if (busy || !canRevise) return;
+  const answer = $('revision-answer').value.trim(); if (!answer) return;
+  cancelVoice(); busy=true; update(); $('revision-answer').disabled=true; $('revise').disabled=true; $('revision-status').textContent='Wir schauen auf deinen Lernschritt …';
+  try {
+    const response=await fetch('/api/revise',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,revision:sessionRevision,answer,language,scenario})});
+    const data=await response.json(); if (!response.ok) throw new Error(data.error);
+    bubble('user',answer); bubble('assistant',data.reply); transcript.push({role:'user',content:answer},{role:'assistant',content:data.reply});
+    sessionRevision=data.state.answers+data.state.practice_answers; $('revision-answer').value=''; $('revision-status').textContent='Deine Überarbeitung wurde gespeichert.'; publishVoice(data.speech);
+  } catch(error) { $('revision-status').textContent='Das hat gerade nicht geklappt. Deine Antwort bleibt hier; versuche es erneut.'; }
+  finally {busy=false; $('revision-answer').disabled=false; $('revise').disabled=false; update();}
+});
+for (const id of ['experience','difficulty']) $(id).addEventListener('change', () => reset());
 $('answer-form').addEventListener('submit', event => { event.preventDefault(); submitToCoach(false); });
 $('recap').addEventListener('click', () => submitToCoach(true));
 $('restart').addEventListener('click', () => { if ((transcript.length > 1 || $('answer').value.trim()) && !confirm(t('restartConfirm'))) return; reset(); $('answer').focus(); });

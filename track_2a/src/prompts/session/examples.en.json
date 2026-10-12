@@ -1,0 +1,148 @@
+{
+  "label": "Demonstrations; fictional inputs, never evidence about the current candidate.",
+  "provenance": "Assistant-adapted demonstrations inspired by organiser T-02/T-03 and F-11. No organiser reference scores are injected. Recap examples are excluded.",
+  "analysis": [
+    {
+      "input": {
+        "asked_question": "Did you find your way here?",
+        "answer": "Yes, thank you. I came by bus."
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "The candidate found the way.",
+            "quote": "Yes, thank you."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "What did you do during the trial placement?",
+        "answer": "Various things. I do not remember exactly."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "partial",
+        "missing_information": "One task performed during the placement.",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "What did you do on the first morning?",
+        "answer": "I checked the expiry dates of yoghurts.",
+        "evidence_records": [
+          {
+            "record_id": "answer-2",
+            "open_gap": "One task performed during the placement."
+          }
+        ]
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "Checking yoghurt expiry dates.",
+            "quote": "I checked the expiry dates of yoghurts."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [
+          "answer-2"
+        ],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Which documents should I send?",
+        "answer": "No, I have not applied yet. Which documents do you need?"
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "The candidate asks for application requirements.",
+            "quote": "Which documents do you need?"
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": "Which documents do you need?"
+      }
+    },
+    {
+      "input": {
+        "answer": "I am too bad at everything. After six rejections, there is no point."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "I am too bad at everything. After six rejections, there is no point.",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    }
+  ],
+  "speaker": [
+    {
+      "input": {
+        "action": "follow_up",
+        "latest_answer": "Various things. I do not remember exactly.",
+        "missing_information": "One task performed during the placement."
+      },
+      "output": {
+        "acknowledgement": "Take your time.",
+        "question": "What did you do on the first morning?"
+      }
+    },
+    {
+      "input": {
+        "action": "advance",
+        "latest_answer": "I checked the expiry dates of yoghurts.",
+        "next_question_text": "Why did you choose this occupation?"
+      },
+      "output": {
+        "acknowledgement": "Thank you, that helps me understand your trial day. Now let us talk about your motivation.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "answer_company",
+        "latest_answer": "Which documents do you need?",
+        "company_fact": "A CV and school reports are required."
+      },
+      "output": {
+        "acknowledgement": "Send your CV and school reports. The supplied information does not specify a deadline.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "support_advance",
+        "support_quote": "I am too bad at everything. After six rejections, there is no point."
+      },
+      "output": {
+        "acknowledgement": "Six rejections sound difficult. You do not have to face that alone. Talk with a trusted adult or career counsellor. Here we can practise at your pace.",
+        "question": ""
+      }
+    }
+  ]
+}

@@ -22,10 +22,23 @@ GUIDANCE = {language: json.loads((PROMPTS / f'guidance.{language}.json').read_te
             for language in INSTRUCTIONS}
 
 
-def task_prompt(task, language):
+def task_prompt(task, language, context=None):
     # Existing English prompts remain preserved; de/fr/it use explicit translations.
     name = f'{task}.txt' if language == 'en' else f'{task}.{language}.txt'
-    return (PROMPTS / name).read_text()
+    prompt = (PROMPTS / name).read_text()
+    if task in ('analysis', 'speaker'):
+        examples = json.loads((PROMPTS / f'examples.{language}.json').read_text())
+        context=context or {}
+        if task=='speaker':
+            selected=[examples[task][{'follow_up':0,'advance':1,'answer_company':2,'support_advance':3}.get(context.get('action'),1)]]
+        else:
+            q=context.get('current_question') or {}
+            if q.get('flow_stage')=='introduction':selected=[examples[task][0],examples[task][4]]
+            elif q.get('flow_stage')=='candidate_questions' or q.get('id')=='Q-OTH-03':selected=[examples[task][0],examples[task][3]]
+            else:selected=examples[task][:2]
+            if any(r.get('open_gap') for r in context.get('evidence_records',[])):selected=selected+[examples[task][2]]
+        prompt += '\n' + examples['label'] + '\n' + json.dumps(selected, ensure_ascii=False)
+    return prompt
 
 
 def question_context(question, language):
@@ -39,6 +52,22 @@ TURN_SCHEMA = {'type':'object','properties':{
     'acknowledgement':{'type':'string'}, 'question':{'type':'string'},
     'followup':{'type':'boolean'}, 'reason':{'type':'string'}},
     'required':['acknowledgement','question','followup','reason'],'additionalProperties':False}
+ANALYSIS_SCHEMA = {'type':'object','properties':{
+ 'observations':{'type':'array','maxItems':3,'items':{'type':'object','properties':{
+  'statement':{'type':'string','maxLength':300},'quote':{'type':'string'}},
+  'required':['statement','quote'],'additionalProperties':False}},
+ 'answer_status':{'type':'string','enum':['answered','partial','unanswered']},
+ 'missing_information':{'type':'string','maxLength':240},
+ 'support_quote':{'type':'string'},
+ 'company_question_quote':{'type':'string'},
+ 'resolved_record_ids':{'type':'array','maxItems':3,'items':{'type':'string'}},
+ 'conflict_record_ids':{'type':'array','maxItems':3,'items':{'type':'string'}}},
+ 'required':['observations','answer_status','missing_information','support_quote','company_question_quote','resolved_record_ids','conflict_record_ids'],'additionalProperties':False}
+SPEAKER_SCHEMA = {'type':'object','properties':{
+ 'acknowledgement':{'type':'string','maxLength':700},'question':{'type':'string','maxLength':300}},
+ 'required':['acknowledgement','question'],'additionalProperties':False}
+
+
 FEEDBACK_SCHEMA = {'type':'object','properties':{
  'summary':{'type':'string'},'closing':{'type':'string'},'criteria':{'type':'array','items':{
  'type':'object','properties':{'key':{'type':'string','enum':[c['key'] for c in RUBRIC['criteria']]},
@@ -93,6 +122,17 @@ class Session:
     situation: str = 'apprenticeship_interview'
     provider: str = 'apertus'
     model: str = 'swiss-ai/Apertus-v1.5-8B'
+    pipeline: str = 'auto'
+    experience: str = 'first_interview'
+    difficulty: str = 'standard'
+    conversation_state: str = 'interview'
+    competencies: dict = field(default_factory=dict)
+    company_answers: list = field(default_factory=list)
+    learning_target: dict | None = None
+    practice_history: list = field(default_factory=list)
+    support_offered: bool = False
+    practice_answers: int = 0
+    prior_learning_targets: list = field(default_factory=list)
     index: int = 0
     current_stage: str = 'introduction'
     question_subtype: str = 'small_talk'
@@ -108,9 +148,22 @@ class Session:
     feedback: dict | None = None
     requests: list = field(default_factory=list)
     validation_warnings: list = field(default_factory=list)
+    answer_analyses: list = field(default_factory=list)
+    turn_decisions: list = field(default_factory=list)
+    evidence_records: list = field(default_factory=list)
+
+    def is_hybrid(self):
+        return self.language == 'de' and self.pipeline != 'legacy'
+
+    def revise(self, text):
+        if not self.is_hybrid(): raise ValueError('Answer revision currently supports German only.')
+        import hybrid
+        return hybrid.revise(self, text)
 
     def start(self):
         if not self.plan: raise ValueError('Empty interview plan.')
+        if self.experience not in ('first_interview','some_practice') or self.difficulty not in ('easy','standard','challenging'): raise ValueError('Invalid interview configuration.')
+        if self.is_hybrid() and len(self.plan)>15: raise ValueError('Hybrid plans allow at most 15 main questions.')
         self.set_question(self.plan[0]); self.main_question_count=1
         openings={'de':'Hallo! Wir üben ein Bewerbungsgespräch. Zuerst lernen wir uns kennen. Dann sprechen wir über die Lehre. Am Schluss kannst du Fragen stellen und bekommst Feedback.',
         'fr':'Bonjour ! Nous allons pratiquer un entretien. Nous faisons connaissance, puis parlons de l’apprentissage. À la fin, tu peux poser tes questions et recevoir du feedback.',
@@ -126,13 +179,16 @@ class Session:
         self.current_stage=q['flow_stage'];self.question_subtype=q['subtopic']
 
     def state(self):
-        return {k:getattr(self,k) for k in ('current_stage','question_subtype','covered_topics','main_question_count','followup_count','current_followups','answers','model_calls','complete')}
+        return {k:getattr(self,k) for k in ('prior_learning_targets','conversation_state','competencies','practice_answers','current_stage','question_subtype','covered_topics','main_question_count','followup_count','current_followups','answers','model_calls','complete')}
 
-    def call(self,messages,schema,validator,max_tokens):
+    def call(self,messages,schema,validator,max_tokens,task='feedback',reserve=0):
         # One initial request plus one bounded correction; every attempt is counted.
         for attempt in range(2):
+            # Strictly below five calls per accepted answer, including early recap.
+            if self.model_calls >= 5*(self.answers+self.practice_answers)-1-reserve:
+                raise ValueError('Session model-call budget exhausted.')
             self.model_calls+=1
-            record={'messages':copy.deepcopy(messages),'attempt':attempt+1}
+            record={'task':task,'messages':copy.deepcopy(messages),'attempt':attempt+1}
             self.requests.append(record)
             try:
                 raw=(model_client.apertus(messages,schema,max_tokens=max_tokens) if self.provider=='apertus' else model_client.ollama(self.model,messages,schema,max_tokens=max_tokens));record['raw_output']=raw
@@ -143,6 +199,9 @@ class Session:
                 messages=messages+[{'role':'user','content':INSTRUCTIONS[self.language]['correction']}]
 
     def answer(self,text,recap=False):
+        if self.is_hybrid():
+            import hybrid
+            return hybrid.answer(self,text,recap)
         if self.complete: raise ValueError('Session is complete.')
         if text:
             if not isinstance(text,str) or not text.strip() or len(text)>4000:raise ValueError('Invalid answer.')
@@ -150,34 +209,58 @@ class Session:
         elif not recap:raise ValueError('An answer is required.')
         if recap:return self.finish()
         current=self.plan[self.index];next_q=self.plan[self.index+1] if self.index+1<len(self.plan) else None
-        allow=self.current_followups==0 and current['flow_stage'] not in ('candidate_questions','closing') and current['type']!='smalltalk' and current['subtopic'] not in ('tech_check','call_opening')
-        context={'language':self.language,'situation':self.situation,'posting':self.posting,'current_question':question_context(current,self.language),
-        'next_question':question_context(next_q,self.language),'next_question_text':question_text(next_q,self.language) if next_q else '',
-        'allow_followup':bool(allow and next_q),'state':self.state()}
-        messages=[{'role':'system','content':task_prompt('interviewer',self.language)+'\n'+INSTRUCTIONS[self.language]['context']+' '+json.dumps(context,ensure_ascii=False)},
-        *[{'role':t['role'],'content':t['content']} for t in self.transcript]]
-        def validate(p):
-            if set(p)!=set(TURN_SCHEMA['required']) or type(p['followup']) is not bool or any(not isinstance(p[k],str) for k in ('acknowledgement','question','reason')):raise ValueError('Invalid interviewer fields.')
-            if next_q and p['followup'] and not p['question'].strip():raise ValueError('A follow-up question is required.')
-            if p['followup'] and not allow:raise ValueError('Follow-up forbidden at this point.')
-            if not next_q and (p['question'] or p['followup']):raise ValueError('End role-play without another question.')
-        messages.append({'role':'user','content':INSTRUCTIONS[self.language]['task']+' '+json.dumps({'next_question_text':context['next_question_text'],'allow_followup':context['allow_followup'],'current_question':current['text'][self.language if self.language!='en' else 'de'],'latest_answer':text},ensure_ascii=False)})
-        try:
-            packet=self.call(messages,TURN_SCHEMA,validate,600)
-        except (ValueError,KeyError,TypeError) as error:
-            if self.language=='en':raise
-            # A bounded failure can safely advance using the existing bank; no fabricated content.
-            self.validation_warnings.append({'question_id':current['id'],'action':'bank_question_fallback','reason':str(error)})
-            packet={'acknowledgement':{'de':'Danke.','fr':'Merci.','it':'Grazie.'}[self.language],
-                    'question':question_text(next_q,self.language) if next_q else '',
-                    'followup':False,'reason':'Two invalid model outputs; deterministic bank fallback.'}
-
-        if not packet['followup'] and next_q and self.language!='en':
-            packet['question']=question_text(next_q,self.language)
-        # Main-question content is controller-owned; strip duplicate questions from acknowledgement.
-        packet['acknowledgement']=' '.join(x for x in re.split(r'(?<=[.!?])\s+',packet['acknowledgement']) if '?' not in x)
-        if current['type']=='smalltalk':
-            packet['acknowledgement']={'de':'Danke.','fr':'Merci.','it':'Grazie.','en':'Thank you.'}[self.language]
+        allow=bool(next_q and self.current_followups==0 and current['flow_stage'] not in ('candidate_questions','closing') and current['type']!='smalltalk' and current['subtopic'] not in ('tech_check','call_opening'))
+        # Analyse every answer, including introductions, so distress and questions
+        # are not discarded by a fixed small-talk shortcut.
+        analysis=self.analyse_answer(text,current)
+        action='advance'
+        if analysis and analysis['support_quote']:
+            action='support_advance'
+        elif current['flow_stage']=='candidate_questions' or (analysis and analysis['company_question_quote']):
+            action='answer_company'
+        elif allow and analysis and analysis['answer_status']!='answered' and analysis['missing_information'].strip():
+            action='follow_up'
+        if current['flow_stage']=='closing' and action=='advance':
+            acknowledgement={'de':'Danke.','fr':'Merci.','it':'Grazie.','en':'Thank you.'}[self.language]
+            question=question_text(next_q,self.language) if next_q else ''
+        else:
+            context={'language':self.language,'situation':self.situation,'posting':self.posting,
+                     'current_question':question_context(current,self.language),
+                     'latest_answer':text,'analysis':analysis,'action':action,
+                     'evidence_records':self.evidence_records,
+                     'next_question_text':question_text(next_q,self.language) if next_q else ''}
+            messages=[{'role':'system','content':task_prompt('speaker',self.language,context)},
+                      {'role':'user','content':json.dumps(context,ensure_ascii=False)},
+                      *[{'role':t['role'],'content':t['content']} for t in self.transcript]]
+            def validate(p):
+                if set(p)!=set(SPEAKER_SCHEMA['required']) or any(not isinstance(p[k],str) for k in p):raise ValueError('Invalid speaker fields.')
+                limit=80 if action=='answer_company' else 60 if action=='support_advance' else 35
+                if len(p['acknowledgement'].split())>limit:raise ValueError('Acknowledgement exceeds word limit.')
+                if action!='follow_up' and not p['acknowledgement'].strip():raise ValueError('A brief contextual response is required.')
+                if action=='follow_up' and (not p['question'].strip() or len(p['question'].split())>35):raise ValueError('One short follow-up required.')
+                if action=='follow_up':
+                    normal=lambda value:re.sub(r'[^\w]+',' ',value.casefold()).strip()
+                    proposed=normal(p['question'])
+                    # A main question must never be recycled as a follow-up.
+                    if proposed in [normal(question_text(q,self.language)) for q in self.plan]:raise ValueError('Follow-up duplicates a planned main question.')
+                    if any(proposed and proposed in normal(t['content']) for t in self.transcript if t['role']=='assistant'):raise ValueError('Repeated question.')
+            try:
+                p=self.call(messages,SPEAKER_SCHEMA,validate,450,task='speaker',reserve=2)
+                acknowledgement=p['acknowledgement']
+                question=p['question'] if action=='follow_up' else (question_text(next_q,self.language) if next_q else '')
+            except (ValueError,KeyError,TypeError) as error:
+                self.validation_warnings.append({'question_id':current['id'],'action':'speaker_bank_fallback','reason':str(error)})
+                action='advance'
+                acknowledgement={'de':'Danke.','fr':'Merci.','it':'Grazie.','en':'Thank you.'}[self.language]
+                if current['flow_stage']=='candidate_questions' or (analysis and analysis['company_question_quote']):
+                    acknowledgement=INSTRUCTIONS[self.language]['unknown_company']
+                if analysis and analysis['support_quote']:
+                    acknowledgement=INSTRUCTIONS[self.language]['support_fallback']
+                question=question_text(next_q,self.language) if next_q else ''
+        self.turn_decisions.append({'answer':self.answers,'question_id':current['id'],'action':action,'analysis_index':len(self.answer_analyses)-1 if analysis else None})
+        packet={'acknowledgement':acknowledgement,'question':question,'followup':action=='follow_up'}
+        if action not in ('answer_company','support_advance'):
+            packet['acknowledgement']=' '.join(x for x in re.split(r'(?<=[.!?])\s+',acknowledgement) if '?' not in x)
         if packet['followup'] and next_q:
             self.current_followups+=1;self.followup_count+=1
         else:
@@ -192,7 +275,69 @@ class Session:
             return self.finish()
         return {'reply':reply,'hint':'','complete':False,'can_continue':True,'suggest_recap':False,'state':self.state()}
 
+    def analyse_answer(self,text,current):
+        # Exact visible excerpts constrain evidence; interpretation still needs review.
+        quotes=[text.strip()]+[p.strip() for p in re.split(r'(?<=[.!?])\s+',text.strip()) if p.strip()]
+        schema=copy.deepcopy(ANALYSIS_SCHEMA)
+        schema['properties']['observations']['items']['properties']['quote']['enum']=list(dict.fromkeys(quotes))
+        schema['properties']['support_quote']['enum']=['']+list(dict.fromkeys(quotes))
+        schema['properties']['company_question_quote']['enum']=['']+list(dict.fromkeys(quotes))
+        known={r['record_id']:r for r in self.evidence_records}
+        for key in ('resolved_record_ids','conflict_record_ids'):
+            ids=[rid for rid,r in known.items() if key=='conflict_record_ids' or r['open_gap']]
+            if ids:schema['properties'][key]['items']['enum']=ids
+            else:schema['properties'][key]['maxItems']=0
+        asked=next(t['content'] for t in reversed(self.transcript) if t['role']=='assistant')
+        context={'current_question':question_context(current,self.language),
+                   'asked_question':asked,'answer':text,'evidence_records':self.evidence_records,
+                   'dialogue':[{'role':t['role'],'content':t['content']} for t in self.transcript]}
+        messages=[{'role':'system','content':task_prompt('analysis',self.language,context)},
+                  {'role':'user','content':json.dumps(context,ensure_ascii=False)}]
+        def validate(p):
+            if set(p)!=set(ANALYSIS_SCHEMA['required']) or p['answer_status'] not in ('answered','partial','unanswered') or not isinstance(p['missing_information'],str):raise ValueError('Invalid analysis fields.')
+            if not isinstance(p['observations'],list) or len(p['observations'])>3:raise ValueError('Invalid observations.')
+            for item in p['observations']:
+                if set(item)!={'statement','quote'} or not isinstance(item['statement'],str) or not isinstance(item['quote'],str) or not item['quote'].strip() or item['quote'] not in text:raise ValueError('Analysis quote absent from latest answer.')
+            if not isinstance(p['support_quote'],str) or (p['support_quote'] and p['support_quote'] not in text):raise ValueError('Support quote absent from latest answer.')
+            if not isinstance(p['company_question_quote'],str) or (p['company_question_quote'] and p['company_question_quote'] not in text):raise ValueError('Company request quote absent from latest answer.')
+            request=p['company_question_quote']
+            if request and '?' not in request and not re.search(r'(möchte|würde|wuerde).{0,25}(wissen|verstehen)|j[’\']aimerais savoir|je (voudrais|souhaite).{0,15}(savoir|comprendre)|vorrei (sapere|capire)|i (would like|want) to (know|understand)',request,re.I):
+                p['company_question_quote']=''  # A quoted statement is not an information request.
+            for key in ('resolved_record_ids','conflict_record_ids'):
+                if not isinstance(p[key],list) or len(p[key])>3 or any(not isinstance(r,str) or r not in known for r in p[key]):raise ValueError('Unknown evidence record.')
+                if p[key] and not p['observations']:raise ValueError('Memory update requires quoted evidence.')
+            if any(not known[r]['open_gap'] for r in p['resolved_record_ids']):raise ValueError('Only an open gap can be resolved.')
+            if p['answer_status']=='answered':p['missing_information']=''  # Ignore contradictory suggestions; a sufficient answer advances.
+            elif re.match(r'^(no |none\b|nothing\b|keine?\b|nichts\b|aucun[e]?\b|rien\b|nessun[ao]?\b|non serve\b)',p['missing_information'].strip(),re.I):
+                raise ValueError('Unanswered status contradicts an empty clarification need.')
+        try:
+            p=self.call(messages,schema,validate,1100,task='analysis',reserve=2)
+        except (ValueError,KeyError,TypeError) as error:
+            self.validation_warnings.append({'question_id':current['id'],'action':'analysis_unavailable','reason':str(error)})
+            self.evidence_records.append({'record_id':f'answer-{self.answers}','turn_id':f'candidate-{self.answers}',
+                'topic':current['flow_stage']+':'+current['subtopic'],'question_id':current['id'],
+                'evidence':[],'open_gap':'','clarified_by':[],'possible_conflict':[],
+                'uncertainty':'analysis_unavailable'})
+            return None
+        self.answer_analyses.append({'answer':self.answers,'question_id':current['id'],**p})
+        record_id=f'answer-{self.answers}'
+        record={'record_id':record_id,'turn_id':f'candidate-{self.answers}',
+                'topic':current['flow_stage']+':'+current['subtopic'],'question_id':current['id'],
+                'evidence':copy.deepcopy(p['observations']),'open_gap':p['missing_information'],
+                'clarified_by':[],'possible_conflict':[]}
+        for rid in p['resolved_record_ids']:
+            known[rid]['clarified_by'].append(record_id)
+            known[rid]['original_gap']=known[rid]['open_gap'];known[rid]['open_gap']=''
+        for rid in p['conflict_record_ids']:
+            known[rid]['possible_conflict'].append(record_id)
+            record['possible_conflict'].append(rid)
+        self.evidence_records.append(record)
+        return p
+
     def finish(self):
+        if self.is_hybrid():
+            import hybrid
+            return hybrid.finish(self)
         if not self.answers:raise ValueError('Answer at least one question before requesting feedback.')
         messages=[{'role':'user','content':json.dumps(self.transcript,ensure_ascii=False)}]
         keys=[c['key'] for c in RUBRIC['criteria']]

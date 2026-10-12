@@ -1,0 +1,148 @@
+{
+  "label": "Exemples fictifs, jamais des preuves concernant la personne actuelle.",
+  "provenance": "Assistant-adapted demonstrations inspired by organiser T-02/T-03 and F-11. No organiser reference scores are injected. Recap examples are excluded.",
+  "analysis": [
+    {
+      "input": {
+        "asked_question": "Tu as bien trouvé le chemin ?",
+        "answer": "Oui, merci. Je suis venue en bus."
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "La personne a trouvé le chemin.",
+            "quote": "Oui, merci."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Qu’as-tu fait pendant ton stage ?",
+        "answer": "Plusieurs choses. Je ne me rappelle pas exactement."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "partial",
+        "missing_information": "Une tâche précise effectuée pendant le stage.",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Qu’as-tu fait le premier matin ?",
+        "answer": "J’ai contrôlé les dates de péremption des yaourts.",
+        "evidence_records": [
+          {
+            "record_id": "answer-2",
+            "open_gap": "Une tâche précise effectuée pendant le stage."
+          }
+        ]
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "Contrôle des dates de péremption des yaourts.",
+            "quote": "J’ai contrôlé les dates de péremption des yaourts."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [
+          "answer-2"
+        ],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Quels documents dois-je envoyer ?",
+        "answer": "Non, pas encore. Quels documents vous faut-il ?"
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "La personne demande les documents requis.",
+            "quote": "Quels documents vous faut-il ?"
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": "Quels documents vous faut-il ?"
+      }
+    },
+    {
+      "input": {
+        "answer": "Je suis nulle en tout. Après six refus, ça ne sert à rien."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "Je suis nulle en tout. Après six refus, ça ne sert à rien.",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    }
+  ],
+  "speaker": [
+    {
+      "input": {
+        "action": "follow_up",
+        "latest_answer": "Plusieurs choses. Je ne me rappelle pas exactement.",
+        "missing_information": "Une tâche précise effectuée pendant le stage."
+      },
+      "output": {
+        "acknowledgement": "Prends ton temps.",
+        "question": "Qu’as-tu fait le premier matin ?"
+      }
+    },
+    {
+      "input": {
+        "action": "advance",
+        "latest_answer": "J’ai contrôlé les dates de péremption des yaourts.",
+        "next_question_text": "Pourquoi as-tu choisi ce métier ?"
+      },
+      "output": {
+        "acknowledgement": "Merci, cela m’aide à comprendre ta journée de stage. Parlons maintenant de ta motivation.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "answer_company",
+        "latest_answer": "Quels documents vous faut-il ?",
+        "company_fact": "Le CV et les bulletins sont requis."
+      },
+      "output": {
+        "acknowledgement": "Envoie ton CV et tes bulletins. Les informations fournies ne précisent pas de délai.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "support_advance",
+        "support_quote": "Je suis nulle en tout. Après six refus, ça ne sert à rien."
+      },
+      "output": {
+        "acknowledgement": "Six refus, cela semble difficile. Tu n’as pas à affronter cela seule. Parle à un adulte de confiance ou à l’orientation professionnelle. Ici, nous pouvons nous entraîner à ton rythme.",
+        "question": ""
+      }
+    }
+  ]
+}

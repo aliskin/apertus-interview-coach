@@ -1,0 +1,148 @@
+{
+  "label": "Esempi inventati, mai prove sulla persona attuale.",
+  "provenance": "Assistant-adapted demonstrations inspired by organiser T-02/T-03 and F-11. No organiser reference scores are injected. Recap examples are excluded.",
+  "analysis": [
+    {
+      "input": {
+        "asked_question": "Hai trovato facilmente la strada ?",
+        "answer": "Sì, grazie. Sono venuto in autobus."
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "La persona ha trovato la strada.",
+            "quote": "Sì, grazie."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Che cosa hai fatto durante lo stage ?",
+        "answer": "Varie cose. Non ricordo esattamente."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "partial",
+        "missing_information": "Un compito preciso svolto durante lo stage.",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Che cosa hai fatto la prima mattina ?",
+        "answer": "Ho controllato le date di scadenza degli yogurt.",
+        "evidence_records": [
+          {
+            "record_id": "answer-2",
+            "open_gap": "Un compito preciso svolto durante lo stage."
+          }
+        ]
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "Controllo delle date di scadenza degli yogurt.",
+            "quote": "Ho controllato le date di scadenza degli yogurt."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [
+          "answer-2"
+        ],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Quali documenti devo inviare ?",
+        "answer": "No, non ancora. Quali documenti vi servono ?"
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "La persona chiede i documenti richiesti.",
+            "quote": "Quali documenti vi servono ?"
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": "Quali documenti vi servono ?"
+      }
+    },
+    {
+      "input": {
+        "answer": "Sono troppo scarso in tutto. Dopo sei rifiuti non serve a niente."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "Sono troppo scarso in tutto. Dopo sei rifiuti non serve a niente.",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    }
+  ],
+  "speaker": [
+    {
+      "input": {
+        "action": "follow_up",
+        "latest_answer": "Varie cose. Non ricordo esattamente.",
+        "missing_information": "Un compito preciso svolto durante lo stage."
+      },
+      "output": {
+        "acknowledgement": "Prenditi un momento.",
+        "question": "Che cosa hai fatto la prima mattina ?"
+      }
+    },
+    {
+      "input": {
+        "action": "advance",
+        "latest_answer": "Ho controllato le date di scadenza degli yogurt.",
+        "next_question_text": "Perché hai scelto questa professione ?"
+      },
+      "output": {
+        "acknowledgement": "Grazie, questo mi aiuta a capire la tua giornata di stage. Ora parliamo della tua motivazione.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "answer_company",
+        "latest_answer": "Quali documenti vi servono ?",
+        "company_fact": "Sono richiesti il CV e le pagelle."
+      },
+      "output": {
+        "acknowledgement": "Invia il CV e le pagelle. Le informazioni fornite non indicano una scadenza.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "support_advance",
+        "support_quote": "Sono troppo scarso in tutto. Dopo sei rifiuti non serve a niente."
+      },
+      "output": {
+        "acknowledgement": "Sei rifiuti sembrano pesanti. Non devi affrontarli da solo. Parlane con un adulto fidato o con l’orientamento professionale. Qui possiamo esercitarci al tuo ritmo.",
+        "question": ""
+      }
+    }
+  ]
+}

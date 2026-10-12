@@ -1,0 +1,148 @@
+{
+  "label": "Beispiele; erfundene Eingaben, keine Belege über die aktuelle Person.",
+  "provenance": "Assistant-adapted demonstrations inspired by organiser T-02/T-03 and F-11. No organiser reference scores are injected. Recap examples are excluded.",
+  "analysis": [
+    {
+      "input": {
+        "asked_question": "Hast du den Weg gut gefunden?",
+        "answer": "Ja, danke. Ich bin mit dem Bus gekommen."
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "Die Person hat den Weg gefunden.",
+            "quote": "Ja, danke."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Was hast du während der Schnupperlehre gemacht?",
+        "answer": "Verschiedene Sachen. Weiss nicht mehr genau."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "partial",
+        "missing_information": "Eine konkrete Tätigkeit während der Schnupperlehre.",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Was hast du am ersten Morgen gemacht?",
+        "answer": "Ich habe die Ablaufdaten von Joghurts kontrolliert.",
+        "evidence_records": [
+          {
+            "record_id": "answer-2",
+            "open_gap": "Eine konkrete Tätigkeit während der Schnupperlehre."
+          }
+        ]
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "Ablaufdaten von Joghurts kontrolliert.",
+            "quote": "Ich habe die Ablaufdaten von Joghurts kontrolliert."
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [
+          "answer-2"
+        ],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    },
+    {
+      "input": {
+        "asked_question": "Welche Unterlagen soll ich schicken?",
+        "answer": "Nein, noch nicht. Welche Unterlagen brauchen Sie?"
+      },
+      "output": {
+        "observations": [
+          {
+            "statement": "Die Person erfragt Bewerbungsunterlagen.",
+            "quote": "Welche Unterlagen brauchen Sie?"
+          }
+        ],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": "Welche Unterlagen brauchen Sie?"
+      }
+    },
+    {
+      "input": {
+        "answer": "Ich bin zu schlecht für alles. Nach sechs Absagen bringt das nichts."
+      },
+      "output": {
+        "observations": [],
+        "answer_status": "answered",
+        "missing_information": "",
+        "support_quote": "Ich bin zu schlecht für alles. Nach sechs Absagen bringt das nichts.",
+        "resolved_record_ids": [],
+        "conflict_record_ids": [],
+        "company_question_quote": ""
+      }
+    }
+  ],
+  "speaker": [
+    {
+      "input": {
+        "action": "follow_up",
+        "latest_answer": "Verschiedene Sachen. Weiss nicht mehr genau.",
+        "missing_information": "Eine konkrete Tätigkeit während der Schnupperlehre."
+      },
+      "output": {
+        "acknowledgement": "Nimm dir kurz Zeit.",
+        "question": "Was hast du am ersten Morgen gemacht?"
+      }
+    },
+    {
+      "input": {
+        "action": "advance",
+        "latest_answer": "Ich habe die Ablaufdaten von Joghurts kontrolliert.",
+        "next_question_text": "Warum hast du dich für diesen Beruf entschieden?"
+      },
+      "output": {
+        "acknowledgement": "Danke, das hilft mir, deinen Schnuppertag zu verstehen. Jetzt sprechen wir über deine Motivation.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "answer_company",
+        "latest_answer": "Welche Unterlagen brauchen Sie?",
+        "company_fact": "Lebenslauf und Zeugnisse sind erforderlich."
+      },
+      "output": {
+        "acknowledgement": "Schick deinen Lebenslauf und deine Zeugnisse. Eine Frist steht in den vorliegenden Angaben nicht.",
+        "question": ""
+      }
+    },
+    {
+      "input": {
+        "action": "support_advance",
+        "support_quote": "Ich bin zu schlecht für alles. Nach sechs Absagen bringt das nichts."
+      },
+      "output": {
+        "acknowledgement": "Sechs Absagen klingen belastend. Du musst damit nicht allein bleiben. Sprich mit einer vertrauten erwachsenen Person oder der Berufsberatung. Hier können wir in deinem Tempo üben.",
+        "question": ""
+      }
+    }
+  ]
+}

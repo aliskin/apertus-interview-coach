@@ -7,7 +7,9 @@
     "guidelines": "Feedback-Leitlinien:",
     "quotes": "Verwende als Belege NUR diese Auszüge aus den Antworten (leere Zeichenfolge bedeutet nicht beurteilbar):",
     "keys": "Gib criteria als Objekt mit genau diesen 11 Schlüsseln zurück:",
-    "correction": "Gib korrigiertes JSON zurück. Die vorige Ausgabe war ungültig. Prüfe Schema, erlaubte Nachfragen und exakte Belege. Behalte die ursprüngliche Aufgabe bei. Erfinde keine Belege."
+    "correction": "Gib korrigiertes JSON zurück. Die vorige Ausgabe war ungültig. Prüfe Schema, erlaubte Nachfragen und exakte Belege. Behalte die ursprüngliche Aufgabe bei. Erfinde keine Belege.",
+    "unknown_company": "Diese Angaben fehlen in den vorliegenden Betriebsinformationen. Frage bitte direkt beim Betrieb nach.",
+    "support_fallback": "Sechs Absagen klingen belastend. Du musst damit nicht allein bleiben. Sprich mit einer vertrauten erwachsenen Person oder der Berufsberatung. Hier können wir in deinem Tempo üben."
   },
   "fr": {
     "context": "Contexte du contrôleur de l’entretien :",
@@ -17,7 +19,9 @@
     "guidelines": "Consignes de feedback :",
     "quotes": "Utilise UNIQUEMENT ces extraits des réponses comme preuves (une chaîne vide signifie non évalué) :",
     "keys": "Renvoie criteria comme objet avec exactement ces 11 clés :",
-    "correction": "Renvoie un JSON corrigé. La sortie précédente était invalide. Vérifie le schéma, les relances autorisées et les citations exactes. Garde la tâche initiale. N’invente aucune preuve."
+    "correction": "Renvoie un JSON corrigé. La sortie précédente était invalide. Vérifie le schéma, les relances autorisées et les citations exactes. Garde la tâche initiale. N’invente aucune preuve.",
+    "unknown_company": "Ces précisions ne figurent pas dans les informations disponibles. Demande-les directement à l’entreprise.",
+    "support_fallback": "Six refus, cela semble difficile. Tu n’as pas à affronter cela seule. Parle à un adulte de confiance ou à l’orientation professionnelle. Ici, nous pouvons nous entraîner à ton rythme."
   },
   "it": {
     "context": "Contesto del controllore del colloquio:",
@@ -27,7 +31,9 @@
     "guidelines": "Linee guida per il feedback:",
     "quotes": "Usa SOLO questi estratti delle risposte come prove (una stringa vuota significa non valutato):",
     "keys": "Restituisci criteria come oggetto con esattamente queste 11 chiavi:",
-    "correction": "Restituisci JSON corretto. L’output precedente non era valido. Controlla schema, approfondimenti consentiti e citazioni esatte. Mantieni il compito originale. Non inventare prove."
+    "correction": "Restituisci JSON corretto. L’output precedente non era valido. Controlla schema, approfondimenti consentiti e citazioni esatte. Mantieni il compito originale. Non inventare prove.",
+    "unknown_company": "Questi dettagli non sono presenti nelle informazioni disponibili. Chiedili direttamente all’azienda.",
+    "support_fallback": "Sei rifiuti sembrano pesanti. Non devi affrontarli da solo. Parlane con un adulto fidato o con l’orientamento professionale. Qui possiamo esercitarci al tuo ritmo."
   },
   "en": {
     "context": "Controller context:",
@@ -37,6 +43,8 @@
     "guidelines": "Guidelines:",
     "quotes": "Use evidence ONLY from these allowed candidate excerpts (empty string means not assessed):",
     "keys": "Return criteria as an object with exactly these 11 keys:",
-    "correction": "Return corrected JSON. The previous output was invalid. Check the schema, permitted follow-ups and exact evidence. Preserve the original task; do not invent evidence."
+    "correction": "Return corrected JSON. The previous output was invalid. Check the schema, permitted follow-ups and exact evidence. Preserve the original task; do not invent evidence.",
+    "unknown_company": "Those details are not available in the supplied company information. Please ask the company directly.",
+    "support_fallback": "Six rejections sound difficult. You do not have to face that alone. Talk with a trusted adult or career counsellor. Here we can practise at your pace."
   }
 }
