@@ -10,6 +10,7 @@ An Apertus-based interview practice app for teenagers preparing for their first 
 - A thirteen-question browser interview covering introduction, motivation, strengths/weaknesses, situational questions, candidate questions and closing, followed by feedback.
 - Questions selected from the supplied FHGR bank, with at most one follow-up per eligible main question.
 - Early recap, feedback across eleven criteria and conversation downloads.
+- German hybrid practice: visible evidence, one learning exercise, answer revision and a saved learning target.
 - A neutral answer placeholder with optional help. The current controller does not generate contextual hints; the interface uses its translated fallback guidance.
 - Responsive desktop/mobile layouts and demo mode without model calls.
 - Voice adapter hooks: ordered speech output and confirmed-transcript input; actual audio services are not included.
@@ -46,19 +47,19 @@ make -C track_2a web
 
 ```mermaid
 flowchart LR
-    Browser[Browser: language, scenario, answers] --> API[Python session API]
-    API --> Controller[Server-owned interview controller]
-    Resources[FHGR questions and fictional postings] --> Controller
-    Controller --> Interviewer[Apertus: transitions and bounded follow-ups]
-    Interviewer --> Controller
-    Controller --> Recap[Apertus: whole-session feedback]
-    Controller --> Storage[Local session JSON and request traces]
-    Controller --> Browser
+    Answer[Candidate answer] --> Analysis[Apertus: quoted evidence and intent]
+    Analysis --> Controller[State machine: action and bank question]
+    Controller --> Interviewer[Apertus: acknowledgement or clarification]
+    Controller --> Company[Select explicit posting facts]
+    Controller --> Support[Code: supportive response]
+    Controller --> Evaluator[Recap: rubric and eligible transcript evidence]
+    Evaluator --> Learning[One exercise, reflection and optional revision]
+    Learning --> History[Saved learning target for next session]
 ```
 
-Code controls stages, question subtypes, topic coverage, counts and termination. Apertus supplies transitions, company answers and permitted follow-ups. German/French/Italian main-question wording is retained from the bank; English wording is less constrained. Small talk receives a brief code-controlled acknowledgement. Feedback is produced at recap, rather than forcing a strength and improvement after every answer.
+German sessions use the hybrid controller in `src/hybrid.py`. Code owns question selection, progression and termination; Apertus handles analysis, short conversational replies, fact selection, assessment and learning support. Company replies show selected original posting facts. Strong self-doubt has a conservative text-trigger fallback and a supportive response. Final feedback displays source quotations and question IDs, followed by one learning exercise and reflection. German users can revise an answer and carry their last learning target into another session for the same profession.
 
-One normal answer makes one interviewer request, with at most one validation correction. Completing the plan also triggers a feedback request; requesting early recap goes directly to feedback. A feedback request permits one correction. JSON validation and exact evidence checks do not guarantee truthful interpretation. No judge or candidate simulator runs in the live app.
+English, French and Italian retain the earlier v8 pipeline. Main questions keep bank wording; competency availability is tracked, but automatic skipping and mastery-based selection are deferred. Experience/difficulty settings are supplied as context; their effectiveness has not been evaluated. Each task permits at most one correction. Code caps counted calls below five per accepted interview/practice answer across the session. A full German recap normally uses three small evaluator groups and one learning call; early recaps use fewer groups to fit the budget. Exact quotations and fact selection do not guarantee correct interpretation or relevance.
 
 For future voice support, responses expose language-tagged speech segments and turn IDs. Browser events support playback cancellation and recognised text as an editable answer draft. No microphone or audio playback is enabled; model responses arrive in full rather than streaming. See the [voice integration contract](track_2a/README.md#voice-integration-contract).
 
@@ -76,7 +77,7 @@ make test
 python src/web.py --provider demo
 ```
 
-All 33 application tests pass. The latest development run completed 28 simulated interviews in German, French and Italian: 417 candidate answers and 471 coach calls, averaging 1.13 calls per answer. Candidate answers were generated separately by Apertus from fictional scenario profiles; these are not human interviews. Assistant-authored whole-session review labels remain drafts awaiting validation.
+All 59 application tests pass. The latest German hybrid comparison reuses 77 saved candidate answers from six scenarios, with the exact preceding v8 conversation for each independent response: 188 coach calls, averaging 2.44 per answer (highest case average 2.77). This is a fixed-context response comparison, not a coherent new full interview or a validated benchmark. Six reviews remain drafts. Support and visible evidence improve, but repetitive transitions, incomplete company replies and unsupported assessment interpretations persist. The earlier v7/v8 runs and labels are preserved.
 
 The challenge weights performance at 50%, consistency at 25% and innovation at 25%, with practicality as a required gate. Recorded call efficiency is below five calls per answer, but hosted inference does not establish operation below 32 GB VRAM. Grounding, candidate-question handling, repetition and follow-up selection remain weaknesses. See the [technical report](track_2a/technical_report.md) for measurements, review findings and limitations.
 

@@ -69,16 +69,18 @@ flowchart LR
     UI[Web interface] --> API[Python session API]
     API --> Controller[Interview controller]
     Bank[Public question bank and posting] --> Controller
-    Controller --> Model[Apertus: transition / optional follow-up]
-    Model --> Controller
+    Controller --> Analysis[Apertus: evidence and missing information]
+    Analysis --> Decision[Code: follow up or advance]
+    Decision --> Speaker[Apertus: brief reply / permitted follow-up]
+    Speaker --> Controller
     Controller --> Feedback[Apertus: final evidenced feedback]
     Controller --> Store[Local session JSON]
     Controller --> UI
 ```
 
-The server chooses a bank-question plan and owns stage, subtype, topic coverage and counters. Each answer triggers one interview request; code validates the response and either permits one follow-up or advances the plan. Finishing the plan or requesting recap triggers a separate whole-session feedback request. The same configured model handles both tasks; no judge is part of the live interview.
+The server selects a bank-question plan and owns stage, subtype, topic coverage and counters. For every interview answer, including introductions, an analysis request extracts at most three observations with exact candidate quotes, an answered/partial/unanswered status and missing information. Code validates quote presence, then permits one follow-up only for a partial/unanswered answer with a stated gap and remaining eligibility. A separate speaker request phrases a short, warm contextual reply. Strong self-doubt is routed to support; actual company-information requests are answered even outside the candidate-question stage. Evidence records preserve quotes, open gaps, clarifications and tentative conflicts for future recap work. Advancing always uses the exact next bank question. The same configured Apertus model handles analysis, speaking and final feedback; no judge runs in the live interview.
 
-Current prompts are the German, French and Italian `src/prompts/session/interviewer.<language>.txt` and `feedback.<language>.txt`; English retains `interviewer.txt` and `feedback.txt`. `guidance.<language>.json` supplies translated rubric/feedback rules, while `instructions.json` localises controller reminders and corrections. The controller supplies public company facts, question metadata, state and actual dialogue. Final feedback also receives the public eleven-criterion rubric and feedback guidelines. Simulator personas, reference annotations and scenario success criteria are excluded from coach input. Older `prompts/web/` are retained only for the legacy stateless API.
+Current prompts are `src/prompts/session/analysis.<language>.txt`, `speaker.<language>.txt` and `feedback.<language>.txt` for German, French and Italian; English uses the unsuffixed files. `examples.<language>.json` supplies a small stage/action-selected set of demonstrations. Older `interviewer*` prompts are retained as the previous design and are no longer used by the controller. Analysis sees the actual question, stage/subtype, latest answer and dialogue. The speaker additionally receives the code action, validated analysis, public posting and next bank question. Final feedback still receives the whole actual transcript, eleven-criterion rubric and feedback guidelines. `guidance.<language>.json` localises those public rules; `instructions.json` supplies corrections and fixed responses. Simulator personas, annotations and scenario success criteria are excluded from coach input. Older `prompts/web/` are used only by the legacy stateless API.
 
 ## Data and privacy
 
@@ -94,9 +96,9 @@ From this directory, run:
 make test
 ```
 
-All 33 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
+All 59 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
 
-The latest local development run completed all 28 organiser scenarios with a separate Apertus candidate simulator. It recorded 417 candidate answers and 471 coach calls, including corrections and final feedback: 1.13 calls per answer. Whole-session assistant reviews are drafts awaiting user validation. Language consistency improved, while grounding, candidate-question handling and follow-up selection remain weak. See [technical_report.md](technical_report.md) for details.
+The preceding v8 warmth/memory experiment completed the same ten highlighted organiser scenarios with a separate Apertus candidate simulator: 135 answers and 290 coach calls, including retries and final feedback, averaging 2.15 calls per answer (highest session average: 2.54). All ten assistant reviews are drafts for validation. Some replies are warmer, but copied demonstration wording, unanswered company questions and missed self-doubt support remain serious problems. No formal follow-ups or memory clarification/conflict links were produced. The preceding v7 run covered all 28 scenarios (1.73 calls per answer). This is not a fixed-answer causal comparison. See [technical_report.md](technical_report.md) for details.
 
 Simulation/evaluation tools, generated runs and manual-review data are deliberately Git-ignored. A fresh clone includes the application, public runtime resources and application tests, but not those local experiments. Commands for private experiment scripts are therefore not part of the submission deployment instructions.
 
@@ -108,7 +110,9 @@ The browser plan has thirteen main questions, including interview closing, follo
 
 The displayed answer ceiling is a conservative bound of twice the plan length (26); eligible-question restrictions make the actual maximum smaller. `MAX_ANSWERS` and `--max-answers` belong to the retained stateless API and do not change the browser controller's plan. The controller currently returns no generated hint, so the interface uses its translated fallback guidance. The first-job scenario label currently selects an apprenticeship posting and the same question plan, rather than a separate first-job interview.
 
-One normal turn makes one model call, with at most one validation correction. The final answer can also trigger a feedback task with up to two calls. Early recap makes only the feedback task. Invalid German/French/Italian interviewer output can fall back to the next bank question after two attempts; invalid English interviewer output and failed feedback are reported as errors. User retries after transport failures can add calls and must be counted. No live judge is used.
+An interview answer normally makes two calls: analysis and speaker, each with at most one correction. Ordinary closing runs analysis then uses fixed thanks before final feedback; introductions now run analysis and speaker so self-doubt can receive support. Final feedback permits one correction. Code counts every attempted coach request, reserves two calls for feedback and enforces a session budget of `5 × accepted answers − 1`; retry attempts also consume it. Invalid analysis is recorded without invented evidence; invalid speaker output or insufficient budget advances using neutral bank wording. A validated distress quote permits a supportive fallback. Follow-ups cannot repeat a planned main question or an already-asked question. The policy applies to all four languages. Transport failures remain retryable errors, and failed final feedback is reported. No live judge is used.
+
+The v8 warmth/memory experiment keeps the supplied question plans and the existing recap prompt/renderer unchanged. It does not yet shorten interviews or feed stored evidence into final assessments.
 
 ## Docker packaging and practicality
 
@@ -118,7 +122,9 @@ The image is an application client; it does not install or serve Apertus weights
 
 ## Local manual review (not included in a fresh clone)
 
-The developer's local portal runs on port 8081 and groups individual-answer v1/v2 and whole-interview v5/v6. It preserves each version's labels separately, displays category summaries and draft/validated status, and links exact coach evidence to guideline notes. Originals are expanded by default, with collapsible AI-assisted English reading aids underneath. Both complete-interview versions now have cached English transcript translations; originals remain authoritative.
+The developer's local portal runs on port 8081 and groups individual-answer v1/v2 and whole-interview v5/v6/v7/v8, plus six German hybrid v9 fixed-context comparisons. It preserves each version's labels separately, displays category summaries and draft/validated status, and links exact coach evidence to guideline notes. Originals are expanded by default, with collapsible AI-assisted English reading aids underneath. All four complete-interview versions have cached English transcript translations; originals remain authoritative.
+
+The v7 version highlights ten purposively selected cases with stars; all 28 draft reviews remain accessible. This shortlist covers all three languages and six scenario formats, and is not an unbiased sample for estimating failure rates.
 
 The portal and its data remain under ignored `src/experiments/` and `data/manual_review/`. The local `make review` target requires those files and is not a supported command for a clean submission checkout. The previous individual review servers have been replaced by this single portal.
 
@@ -169,3 +175,24 @@ window.dispatchEvent(new CustomEvent('coach:transcription', {
 The browser rejects interim, stale-session, wrong-language, empty and over-4,000-character transcripts, and transcripts arriving while a request is pending or the session is complete. It does not overwrite an existing draft or submit automatically. The user reviews/edits the recognised text and presses Send. Only that confirmed text reaches the coach through the existing answer API; audio, confidence, accent and inferred voice traits are not sent or assessed.
 
 An audio adapter must obtain user permission before using the microphone or sending speech text to an additional service. It must register its listeners before session start, handle cancellation and choose a compatible voice for the language tag. The current server policy allows same-origin connections; using an external browser speech service needs an explicit deployment/privacy and content-security-policy decision. Voice adapters are not implemented or enabled by this change.
+
+The v8 version contains the same ten validation scenarios, with separate draft labels and evidence records in the analysis fold. Start validation with S-23 (missed strong-self-doubt support), S-07 or S-10 (copied demonstrations/company questions), and S-27 (unresolved occupation conflict). Older samples and labels are preserved.
+
+
+## German hybrid pipeline (v9)
+
+German sessions now dispatch to `src/hybrid.py`; English/French/Italian use the preceding v8 pipeline described above. Normal German turns use analysis plus interviewer/fact-selection, while support can be supplied by code. Advance acknowledgements are limited to 22 words, cannot contain an added question and reject selected forms of unsupported skill praise. Only clarification actions can generate a question; advancing uses the exact next bank question. Plans have at most 15 main questions and one clarification per eligible question. Automatic competency-based question skipping is not implemented.
+
+`hybrid_analysis.de.txt` extracts literal quotes, a specific gap, candidate requests and support needs. Quoted observations are not skill judgements. Code labels reported/hypothetical evidence and tracks unassessed/partial/evidence-available competencies; evidence availability is not mastery. A conservative German self-doubt pattern backs up model routing. Company requests use `hybrid_company.de.txt` to select explicit posting excerpts by fact ID, with unavailable parts acknowledged. This prevents free invented company rules, but selection can still be incomplete or irrelevant.
+
+Recap uses `hybrid_evaluator.de.txt` in up to three small criterion groups, with public rubric anchors and question-scoped evidence IDs. Short early recaps use one group. Scores without eligible evidence are rejected; voice/body-language assessment is unavailable for text, and unassessed entries cannot contain free-form judgements. Literal evidence checks cannot establish semantic validity. Feedback renders the actual quoted passages and question IDs.
+
+`hybrid_learning.de.txt` receives one code-selected lowest-scoring supported target, offering one concrete exercise, reflection and revision. Targets scored 3–4 are marked optional practice. Learner alignment is imperfect and needs validation. `/api/revise` uses `hybrid_revision.de.txt` to compare a revised answer against that target without replacing original scores. Interview and practice answers are separate counters; all attempted requests count against `5 × (interview answers + practice answers) − 1`.
+
+The German interface offers experience (`first_interview`/`some_practice`) and difficulty (`easy`/`standard`/`challenging`). These are passed as context; effects are not benchmarked. The browser remembers a previous session ID locally and supplies it when starting another session for the same scenario. The server restores up to three saved exercises only for the same posting, exposing the latest learning target. This is a minimal practice history, not a progress score, login or transcript-resume feature. `/api/session/start` also accepts these fields directly; server-owned session data remains authoritative.
+
+The six v9 review cases are independent frozen-context comparisons of S-07/S-12/S-23/S-24/S-25/S-26, reusing all 77 saved candidate answers. Each reply sees the original preceding v8 dialogue; changed clarification branches would be left unanswered rather than receiving an unrelated saved answer. No such branch was generated. Source questions in the portal are marked as context and are excluded from labelled output. The recap assesses the original candidate transcript. Recorded calls: 188 (2.44 per answer, max case average 2.77), including retries and evaluator/learning tasks. Five speaker fallbacks and one truncated evaluator group remain. Six assistant-authored reviews are drafts, with notes per guideline. They show improvement in support and evidence display but still flag unsupported interpretation in every case. They are not official or human-validated scores.
+
+Docker now includes `hybrid.py`; the image must be rebuilt before deployment. Final consumer-hardware VRAM verification remains outstanding.
+
+A recap after only greeting/arrival small talk uses a short deterministic acknowledgement: no scores, invented deficiency, learning task or revision target. This phase guard was added during live UI verification and does not affect the six substantive fixed-context comparisons.
