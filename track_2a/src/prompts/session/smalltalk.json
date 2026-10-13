@@ -1,0 +1,23 @@
+{
+  "default": "today",
+  "questions": {
+    "today": {
+      "de": "Wie geht es dir heute?",
+      "en": "How are you today?",
+      "fr": "Comment vas-tu aujourd’hui ?",
+      "it": "Come stai oggi?"
+    },
+    "day": {
+      "de": "Wie war dein Tag bisher?",
+      "en": "How has your day been so far?",
+      "fr": "Comment s’est passée ta journée jusqu’ici ?",
+      "it": "Come sta andando la tua giornata?"
+    },
+    "feeling": {
+      "de": "Wie fühlst du dich vor unserem Gespräch?",
+      "en": "How are you feeling before our interview?",
+      "fr": "Comment te sens-tu avant notre entretien ?",
+      "it": "Come ti senti prima del nostro colloquio?"
+    }
+  }
+}

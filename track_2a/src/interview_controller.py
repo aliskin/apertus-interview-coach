@@ -17,6 +17,7 @@ QUESTIONS = records(DATA / 'questions.jsonl')
 POSTINGS = records(DATA / 'postings.jsonl')
 RUBRIC = json.loads((DATA / 'criteria.json').read_text())
 GUIDELINES = json.loads((DATA / 'feedback_guidelines.json').read_text())
+SMALLTALK = json.loads((PROMPTS / 'smalltalk.json').read_text())
 INSTRUCTIONS = json.loads((PROMPTS / 'instructions.json').read_text())
 GUIDANCE = {language: json.loads((PROMPTS / f'guidance.{language}.json').read_text())
             for language in INSTRUCTIONS}
@@ -93,7 +94,7 @@ def make_plan(ids, dossier=None):
 
 # Reviewed interface defaults; the organiser bank otherwise contains de/fr/it.
 ENGLISH_DEFAULTS = {
- 'Q-01-01':'Did you find your way here easily?',
+ 'Q-01-01':'How are you today?',
  'Q-02-01':'Tell us a little about yourself.',
  'Q-03-01':'Why did you choose this occupation?',
  'Q-03-04':'Why would you like to do your apprenticeship at our company?',
@@ -109,6 +110,9 @@ ENGLISH_DEFAULTS = {
 }
 
 def question_text(q, language):
+    # Online practice keeps the supplied bank intact and overrides the travel opener.
+    smalltalk_key=q.get('smalltalk_key', SMALLTALK['default'] if q['id']=='Q-01-01' else None)
+    if smalltalk_key is not None:return SMALLTALK['questions'][smalltalk_key][language]
     if language=='en': return q['text'].get('en', ENGLISH_DEFAULTS.get(q['id'],q['text']['de']))
     return q['text'][language]
 
@@ -170,7 +174,6 @@ class Session:
         'it':'Ciao! Facciamo un colloquio di prova. Prima ci conosciamo, poi parliamo dell’apprendistato. Alla fine puoi fare domande e ricevere un feedback.',
         'en':'Hello! We will practise an interview. First we get to know each other, then discuss the apprenticeship. At the end you can ask questions and receive feedback.'}
         first=question_text(self.plan[0],self.language)
-        if self.language=='en' and self.plan[0]['id']=='Q-01-01':first='Did you find your way here easily?'
         text=openings[self.language]+' '+first
         self.transcript.append({'role':'assistant','content':text,'question_id':self.plan[0]['id'],'stage':self.current_stage})
         return text
