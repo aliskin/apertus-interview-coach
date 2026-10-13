@@ -43,7 +43,8 @@ def analyse(s,text,q):
                 'requests':array(quoted),'support_quote':{'type':'string','enum':['']+excerpts},
                 'resolves':array({'type':'string','enum':['']+list(known)}),
                 'conflicts':array({'type':'string','enum':['']+list(known)})})
-    data={'question':c.question_context(q,'de'),'answer':text,'occupation':s.posting['occupation']['name_de'],
+    position=len(s.transcript)-1 if s.transcript and s.transcript[-1]['role']=='user' else len(s.transcript)
+    data={'question':c.answered_question_context(s.transcript,position,q,'de'),'answer':text,'occupation':s.posting['occupation']['name_de'],
           'evidence_records':s.evidence_records,'dialogue':s.transcript,'experience':s.experience,'difficulty':s.difficulty,'prior_learning_targets':s.prior_learning_targets}
     def validate(p):
         if set(p)!=set(schema['required']) or p['status'] not in ('sufficient','gap','unclear'):raise ValueError('Invalid analysis.')
@@ -138,7 +139,7 @@ def answer(s,text,recap=False):
     if s.complete:raise ValueError('Session is complete.')
     if text:
         if not isinstance(text,str) or not text.strip() or len(text)>4000:raise ValueError('Invalid answer.')
-        s.transcript.append({'role':'user','content':text.strip(),'question_id':s.plan[s.index]['id'],'stage':s.current_stage});s.answers+=1
+        s.record_answer(text)
     elif not recap:raise ValueError('An answer is required.')
     if recap:return finish(s)
     q=s.plan[s.index];nxt=s.plan[s.index+1] if s.index+1<len(s.plan) else None
@@ -156,7 +157,7 @@ def answer(s,text,recap=False):
         s.conversation_state='clarification' if action=='clarify' else 'interview'
         if q['flow_stage']=='closing':ack='Danke für das Gespräch.'
         else:
-            data={'action':action,'question':c.question_context(q,'de'),'answer':text,'gap':a['missing_information'],
+            data={'action':action,'question':c.answered_question_context(s.transcript,len(s.transcript)-1,q,'de'),'answer':text,'gap':a['missing_information'],
                   'difficulty':s.difficulty,'experience':s.experience,'next_stage':nxt['flow_stage'] if nxt else 'feedback','previous_replies':[t['content'] for t in s.transcript if t['role']=='assistant'][-3:]}
             schema=obj({'acknowledgement':STR,'question':STR if action=='clarify' else {'type':'string','enum':['']}})
             def validate(p):
@@ -181,7 +182,7 @@ def answer(s,text,recap=False):
             s.index+=1;s.current_followups=0;s.main_question_count+=1;s.set_question(nxt);question=c.question_text(nxt,'de')
             if action=='support':ack+=' Wenn du weiterüben möchtest:'
     reply=join_reply(ack,question)
-    if reply:s.transcript.append({'role':'assistant','content':reply,'question_id':s.plan[s.index]['id'],'stage':s.current_stage,'followup':action=='clarify','action':action})
+    if reply:s.transcript.append({'role':'assistant','content':reply,'question_id':s.plan[s.index]['id'],'stage':s.current_stage,'actual_question':question,'followup':action=='clarify','action':action})
     if not nxt and action!='clarify':s.roleplay_finished=True;return finish(s)
     return {'reply':reply,'hint':'','complete':False,'can_continue':True,'suggest_recap':False,'state':s.state()}
 
@@ -189,7 +190,8 @@ def answer(s,text,recap=False):
 def eligible_evidence(s):
     # Rebuild from the actual transcript too: early recap must not lose its last unanalysed answer.
     result={k['key']:{} for k in c.RUBRIC['criteria']}
-    for i,t in enumerate(t for t in s.transcript if t['role']=='user'):
+    candidates=[(pos,t) for pos,t in enumerate(s.transcript) if t['role']=='user']
+    for i,(position,t) in enumerate(candidates):
         q=c.QUESTIONS.get(t.get('question_id'))
         if not q:continue
         kind='hypothetical' if q['id'].startswith('Q-SIT-') or q['type']=='situational' else 'reported'
@@ -198,8 +200,20 @@ def eligible_evidence(s):
             for key in q['criteria']:
                 if key=='difficult_questions' and q['flow_stage']!='situational' and q['type']!='difficult':continue
                 if key=='demeanor':continue # Text is not observed body language or vocal delivery.
-                result[key][eid]={'quote':quote,'kind':evidence_kind(q,quote),'question_id':q['id'],'turn_id':f'candidate-{i+1}'}
+                result[key][eid]={'quote':quote,'kind':evidence_kind(q,quote),'question_id':q['id'],'turn_id':f'candidate-{i+1}','actual_question':c.answered_question_context(s.transcript,position,q,'de')['text']}
     return result
+
+
+def full_answers(s):
+    answers=[]
+    for position,turn in enumerate(s.transcript):
+        if turn['role']!='user':continue
+        question=c.QUESTIONS.get(turn.get('question_id'))
+        if question is None:continue
+        answers.append({'turn_id':f'candidate-{len(answers)+1}',
+                        'question':c.answered_question_context(s.transcript,position,question,'de'),
+                        'answer':turn['content']})
+    return answers
 
 
 def finish(s):
@@ -235,7 +249,7 @@ def finish(s):
                 if not isinstance(item['explanation'],str) or len(item['explanation'].split())>55:raise ValueError('Explanation too long.')
         data={'rubric':[x for x in c.GUIDANCE['de']['rubric'] if x['key'] in group],
               'allowed_evidence':{key:allowed[key] for key in group},
-              'answers':[{'question':c.question_context(c.QUESTIONS[t['question_id']],'de'),'answer':t['content']} for t in s.transcript if t['role']=='user' and t.get('question_id') in c.QUESTIONS and set(c.QUESTIONS[t['question_id']]['criteria'])&set(group)]}
+              'answers':[row for row in full_answers(s) if set(c.QUESTIONS[row['question']['id']]['criteria'])&set(group)]}
         reserve=(len(groups)-group_number-1)+1
         try:p=s.call(messages('evaluator',data),schema,validate,1200 if batch_count>1 else 2400,task='evaluator',reserve=reserve)
         except (ValueError,KeyError,TypeError) as e:

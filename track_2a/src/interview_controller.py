@@ -117,6 +117,21 @@ def question_text(q, language):
     return q['text'][language]
 
 
+def answered_question_context(transcript, position, question, language):
+    """Actual wording is authoritative; bank wording remains separate planning metadata."""
+    turn=transcript[position] if position<len(transcript) else {}
+    actual=turn.get('actual_question')
+    source=turn.get('actual_question_source','stored_question')
+    if not actual:
+        preceding=next((t for t in reversed(transcript[:position]) if t['role']=='assistant' and t.get('stage')!='feedback'),None)
+        if preceding:
+            actual=preceding.get('actual_question') or preceding['content']
+            source='stored_question' if preceding.get('actual_question') else 'previous_coach_reply'
+        else:actual=question_text(question,language);source='bank_fallback'
+    context=question_context(question,language)
+    return {**context,'text':actual,'planned_text':context['text'],'wording_source':source}
+
+
 @dataclass
 class Session:
     language: str
@@ -175,8 +190,16 @@ class Session:
         'en':'Hello! We will practise an interview. First we get to know each other, then discuss the apprenticeship. At the end you can ask questions and receive feedback.'}
         first=question_text(self.plan[0],self.language)
         text=openings[self.language]+' '+first
-        self.transcript.append({'role':'assistant','content':text,'question_id':self.plan[0]['id'],'stage':self.current_stage})
+        self.transcript.append({'role':'assistant','content':text,'question_id':self.plan[0]['id'],'stage':self.current_stage,'actual_question':first})
         return text
+
+    def record_answer(self,text):
+        question=self.plan[self.index]
+        context=answered_question_context(self.transcript,len(self.transcript),question,self.language)
+        self.transcript.append({'role':'user','content':text.strip(),'question_id':question['id'],
+            'stage':self.current_stage,'actual_question':context['text'],
+            'actual_question_source':context['wording_source'],'planned_question':question_context(question,self.language)})
+        self.answers+=1
 
     def set_question(self,q):
         self.current_stage=q['flow_stage'];self.question_subtype=q['subtopic']
@@ -208,7 +231,7 @@ class Session:
         if self.complete: raise ValueError('Session is complete.')
         if text:
             if not isinstance(text,str) or not text.strip() or len(text)>4000:raise ValueError('Invalid answer.')
-            self.transcript.append({'role':'user','content':text.strip(),'question_id':self.plan[self.index]['id'],'stage':self.current_stage});self.answers+=1
+            self.record_answer(text)
         elif not recap:raise ValueError('An answer is required.')
         if recap:return self.finish()
         current=self.plan[self.index];next_q=self.plan[self.index+1] if self.index+1<len(self.plan) else None
@@ -228,7 +251,7 @@ class Session:
             question=question_text(next_q,self.language) if next_q else ''
         else:
             context={'language':self.language,'situation':self.situation,'posting':self.posting,
-                     'current_question':question_context(current,self.language),
+                     'current_question':answered_question_context(self.transcript,len(self.transcript)-1,current,self.language),
                      'latest_answer':text,'analysis':analysis,'action':action,
                      'evidence_records':self.evidence_records,
                      'next_question_text':question_text(next_q,self.language) if next_q else ''}
@@ -272,7 +295,7 @@ class Session:
             if next_q:
                 self.index+=1;self.current_followups=0;self.main_question_count+=1;self.set_question(next_q)
         reply=' '.join(x.strip() for x in (packet['acknowledgement'],packet['question']) if x.strip())
-        if reply:self.transcript.append({'role':'assistant','content':reply,'question_id':self.plan[self.index]['id'],'stage':self.current_stage,'followup':packet['followup']})
+        if reply:self.transcript.append({'role':'assistant','content':reply,'question_id':self.plan[self.index]['id'],'stage':self.current_stage,'actual_question':packet['question'],'followup':packet['followup']})
         if not next_q:
             self.roleplay_finished=True
             return self.finish()
@@ -291,7 +314,7 @@ class Session:
             if ids:schema['properties'][key]['items']['enum']=ids
             else:schema['properties'][key]['maxItems']=0
         asked=next(t['content'] for t in reversed(self.transcript) if t['role']=='assistant')
-        context={'current_question':question_context(current,self.language),
+        context={'current_question':answered_question_context(self.transcript,len(self.transcript)-1,current,self.language),
                    'asked_question':asked,'answer':text,'evidence_records':self.evidence_records,
                    'dialogue':[{'role':t['role'],'content':t['content']} for t in self.transcript]}
         messages=[{'role':'system','content':task_prompt('analysis',self.language,context)},

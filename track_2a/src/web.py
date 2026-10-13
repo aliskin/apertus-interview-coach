@@ -230,7 +230,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not isinstance(text,str) or len(text)>4000:raise ValueError('Invalid answer.')
                 if not text.strip() and self.path!='/api/recap':raise ValueError('An answer is required.')
                 if not text.strip() and not session.answers:raise ValueError('Answer at least one question before recap.')
-                if text.strip():session.transcript.append({'role':'user','content':text.strip()});session.answers+=1
+                if text.strip():session.record_answer(text)
                 done=self.path=='/api/recap' or session.index+1==len(session.plan)
                 if done:session.complete=True;session.current_stage='feedback';session.question_subtype='session_recap';reply=LOCALES[language]['demo3']
                 else:

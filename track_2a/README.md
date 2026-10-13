@@ -96,7 +96,7 @@ From this directory, run:
 make test
 ```
 
-All 59 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
+All 66 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
 
 The preceding v8 warmth/memory experiment completed the same ten highlighted organiser scenarios with a separate Apertus candidate simulator: 135 answers and 290 coach calls, including retries and final feedback, averaging 2.15 calls per answer (highest session average: 2.54). All ten assistant reviews are drafts for validation. Some replies are warmer, but copied demonstration wording, unanswered company questions and missed self-doubt support remain serious problems. No formal follow-ups or memory clarification/conflict links were produced. The preceding v7 run covered all 28 scenarios (1.73 calls per answer). This is not a fixed-answer causal comparison. See [technical_report.md](technical_report.md) for details.
 
@@ -196,3 +196,7 @@ The six v9 review cases are independent frozen-context comparisons of S-07/S-12/
 Docker now includes `hybrid.py`; the image must be rebuilt before deployment. Final consumer-hardware VRAM verification remains outstanding.
 
 A recap after only greeting/arrival small talk uses a short deterministic acknowledgement: no scores, invented deficiency, learning task or revision target. This phase guard was added during live UI verification and does not affect the six substantive fixed-context comparisons.
+
+## Actual question tracking
+
+Candidate turns store the actual spoken question separately from the planned bank wording. Analysis and German recap question–answer pairs use actual wording; evidence includes it too. New coach turns store their question independently of the acknowledgement. Older sessions fall back to the saved preceding coach reply, with explicit provenance, and only use bank wording when history is unavailable. This fixes context handling, not generated-question purpose compliance. No additional model calls are introduced.
