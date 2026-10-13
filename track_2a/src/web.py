@@ -206,8 +206,8 @@ class Handler(BaseHTTPRequestHandler):
                     if prior and prior.posting['id']==session.posting['id']:
                         session.prior_learning_targets=[x for x in prior.practice_history if 'exercise' in x][-3:]
                 opening=session.start();identifier=uuid.uuid4().hex
-                self.server.sessions[identifier]=session
                 self.persist_session(identifier,session)
+                self.server.sessions[identifier]=session
                 return self.send(200,{'session_id':identifier,'opening':opening,'state':session.state(),'max_answers':len(session.plan)*2,
                                      'speech':voice.speech_output(opening,language,identifier,0,'opening')})
             identifier=payload['session_id']
@@ -221,9 +221,9 @@ class Handler(BaseHTTPRequestHandler):
             if self.path=='/api/revise':
                 try:result=session.revise(payload.get('answer',''))
                 except (ValueError,KeyError,TypeError,RuntimeError,OSError):
-                    original.model_calls=session.model_calls;original.requests=session.requests;self.persist_session(identifier,original);raise
+                    self.retain_spent_calls(identifier,original,session);raise
                 result['speech']=voice.speech_output(result['reply'],language,identifier,session.answers+session.practice_answers,'feedback')
-                self.persist_session(identifier,session);self.server.sessions[identifier]=session
+                self.commit_session(identifier,original,session)
                 return self.send(200,result)
             if self.server.provider=='demo':
                 text=payload.get('answer','')
@@ -242,14 +242,27 @@ class Handler(BaseHTTPRequestHandler):
                     result=session.answer(payload.get('answer',''),recap=self.path=='/api/recap')
                 except (ValueError,KeyError,TypeError,RuntimeError,OSError):
                     # Roll back dialogue, but retain spent requests for accurate retry accounting.
-                    original.model_calls=session.model_calls;original.requests=session.requests
-                    original.validation_warnings=session.validation_warnings
-                    self.persist_session(identifier,original)
+                    self.retain_spent_calls(identifier,original,session)
                     raise
             result['speech']=voice.speech_output(result['reply'],language,identifier,session.answers,
                                                 'feedback' if session.complete else 'interview')
-            self.persist_session(identifier,session);self.server.sessions[identifier]=session
+            self.commit_session(identifier,original,session)
             return self.send(200,result)
+
+    def retain_spent_calls(self,identifier,original,attempt):
+        # Dialogue/revisions stay rolled back, but spent calls cannot be refunded.
+        original.model_calls=attempt.model_calls
+        original.requests=attempt.requests
+        original.validation_warnings=attempt.validation_warnings
+        try:self.persist_session(identifier,original)
+        except OSError:pass  # Keep accounting in memory even while storage is unavailable.
+
+    def commit_session(self,identifier,original,attempt):
+        try:self.persist_session(identifier,attempt)
+        except OSError:
+            self.retain_spent_calls(identifier,original,attempt)
+            raise
+        self.server.sessions[identifier]=attempt
 
     def persist_session(self,identifier,session):
         folder=interview_controller.ROOT/'data/sessions';folder.mkdir(parents=True,exist_ok=True)

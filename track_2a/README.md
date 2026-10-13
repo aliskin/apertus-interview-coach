@@ -96,7 +96,7 @@ From this directory, run:
 make test
 ```
 
-All 66 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
+All 70 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
 
 The preceding v8 warmth/memory experiment completed the same ten highlighted organiser scenarios with a separate Apertus candidate simulator: 135 answers and 290 coach calls, including retries and final feedback, averaging 2.15 calls per answer (highest session average: 2.54). All ten assistant reviews are drafts for validation. Some replies are warmer, but copied demonstration wording, unanswered company questions and missed self-doubt support remain serious problems. No formal follow-ups or memory clarification/conflict links were produced. The preceding v7 run covered all 28 scenarios (1.73 calls per answer). This is not a fixed-answer causal comparison. See [technical_report.md](technical_report.md) for details.
 
@@ -200,3 +200,7 @@ A recap after only greeting/arrival small talk uses a short deterministic acknow
 ## Actual question tracking
 
 Candidate turns store the actual spoken question separately from the planned bank wording. Analysis and German recap question–answer pairs use actual wording; evidence includes it too. New coach turns store their question independently of the acknowledgement. Older sessions fall back to the saved preceding coach reply, with explicit provenance, and only use bank wording when history is unavailable. This fixes context handling, not generated-question purpose compliance. No additional model calls are introduced.
+
+## Failed-save call accounting
+
+A failed save rolls back conversation, progression and revision counters, while retaining spent model calls and traces in the in-memory session. The server tries an atomic write of the rollback accounting. This covers answers, recap and revisions; initial sessions are registered only after their save succeeds. If storage stays unavailable, accounting remains in memory but cannot survive a process crash without a successful write. No additional model calls are introduced.

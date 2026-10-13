@@ -210,3 +210,7 @@ Live UI verification exposed a remaining small-talk-only grading failure: the ev
 ## Actual question context correction
 
 The current controller preserves actual question wording, including clarifications, in transcript records. Analysis and the existing grouped German evaluator receive that wording rather than reconstructed bank questions. Planned stage/criterion metadata remains separate. Old transcripts recover preceding coach replies with provenance. Regression tests cover actual analysis/evidence/recap context, old-session recovery, serialization and legacy-language analysis. The grouped evaluator, learner and prompt policies are unchanged.
+
+## Persistence accounting correction
+
+Successful inference followed by failed persistence no longer refunds model-call costs. Conversation state remains unaccepted, while costs/traces are retained and rollback accounting is persisted on a best-effort basis. Repeated disk failure retains accounting in memory; durable restart recovery requires a successful write. Regression tests cover repeated failures, recovered rollback accounting, successful transitions and failed revision saves.
