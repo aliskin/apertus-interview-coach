@@ -5,6 +5,7 @@
 !interview_context.py
 !interview_controller.py
 !hybrid.py
+!connected.py
 !web.py
 !voice.py
 !prompts/
