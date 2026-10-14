@@ -1,0 +1,17 @@
+{
+  "de": {
+    "self_introduction": "Dann lernen wir uns etwas kennen.",
+    "career_choice": "Danke. Jetzt geht es um deine Berufswahl.",
+    "continue": "Danke. Machen wir weiter."
+  },
+  "fr": {
+    "self_introduction": "Commençons par faire connaissance.",
+    "career_choice": "Merci. Parlons maintenant de ton choix de métier.",
+    "continue": "Merci. Continuons."
+  },
+  "it": {
+    "self_introduction": "Cominciamo a conoscerci.",
+    "career_choice": "Grazie. Ora parliamo della tua scelta professionale.",
+    "continue": "Grazie. Continuiamo."
+  }
+}

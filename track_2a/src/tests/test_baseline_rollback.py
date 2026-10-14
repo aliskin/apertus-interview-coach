@@ -13,7 +13,7 @@ class BaselineRollbackTests(unittest.TestCase):
         s.start()
         return s
 
-    def test_default_neutral_openings_use_v8_analysis_and_speaker(self):
+    def test_default_neutral_openings_use_analysis_and_fixed_transition(self):
         examples = [
             'Mir geht’s gut, danke. Ich bin Dario, 16 Jahre alt aus Luzern.',
             'Ich freue mich, über die Lehre als Mediamatiker zu sprechen.',
@@ -31,10 +31,10 @@ class BaselineRollbackTests(unittest.TestCase):
                 with patch.object(c.model_client, 'apertus', side_effect=[json.dumps(analysis), json.dumps(speaker)]) as model, patch.object(hybrid, 'answer') as later:
                     reply = s.answer(answer)['reply']
                 later.assert_not_called()
-                self.assertEqual(model.call_count, 2)
+                self.assertEqual(model.call_count, 1)
                 self.assertEqual(s.turn_decisions[-1]['action'], 'advance')
                 self.assertNotIn('Absagen', reply)
-                self.assertIn('Schön, dass du heute mitmachst.', reply)
+                self.assertIn('Danke. Jetzt geht es um deine Berufswahl.', reply)
                 self.assertEqual(s.transcript[-1]['actual_question'], 'Warum hast du dich für diesen Beruf entschieden?')
                 self.assertEqual(s.evidence_records[0]['evidence'][0]['quote'], answer)
 

@@ -20,6 +20,7 @@ GUIDELINES = json.loads((DATA / 'feedback_guidelines.json').read_text())
 SMALLTALK = json.loads((PROMPTS / 'smalltalk.json').read_text())
 QUESTION_VARIANTS_DE = json.loads((PROMPTS / 'question_variants.de.json').read_text())
 INSTRUCTIONS = json.loads((PROMPTS / 'instructions.json').read_text())
+OPENING_TRANSITIONS = json.loads((PROMPTS / 'opening_transitions.json').read_text())
 GUIDANCE = {language: json.loads((PROMPTS / f'guidance.{language}.json').read_text())
             for language in INSTRUCTIONS}
 
@@ -32,14 +33,16 @@ def task_prompt(task, language, context=None):
         examples = json.loads((PROMPTS / f'examples.{language}.json').read_text())
         context=context or {}
         if task=='speaker':
-            selected=[examples[task][{'follow_up':0,'advance':1,'answer_company':2,'support_advance':3}.get(context.get('action'),1)]]
+            # One trial-day example is not a safe demonstration for every stage.
+            index={'follow_up':0,'answer_company':2,'support_advance':3}.get(context.get('action'))
+            selected=[] if index is None else [examples[task][index]]
         else:
             q=context.get('current_question') or {}
             if q.get('flow_stage')=='introduction':selected=[examples[task][0],examples[task][4]]
             elif q.get('flow_stage')=='candidate_questions' or q.get('id')=='Q-OTH-03':selected=[examples[task][0],examples[task][3]]
             else:selected=examples[task][:2]
             if any(r.get('open_gap') for r in context.get('evidence_records',[])):selected=selected+[examples[task][2]]
-        prompt += '\n' + examples['label'] + '\n' + json.dumps(selected, ensure_ascii=False)
+        if selected:prompt += '\n' + examples['label'] + '\n' + json.dumps(selected, ensure_ascii=False)
     return prompt
 
 
@@ -305,7 +308,14 @@ class Session:
             action='answer_company'
         elif allow and analysis and analysis['answer_status']!='answered' and analysis['missing_information'].strip():
             action='follow_up'
-        if current['flow_stage']=='closing' and action=='advance':
+        ordinary_opening=(self.is_hybrid() and self.language in OPENING_TRANSITIONS
+                          and current['id'] in ('Q-01-01','Q-02-01') and action=='advance'
+                          and analysis is not None and analysis['answer_status']=='answered')
+        if ordinary_opening:
+            transition='self_introduction' if next_q and next_q['id']=='Q-02-01' else 'career_choice' if next_q and next_q['id']=='Q-03-01' else 'continue'
+            acknowledgement=OPENING_TRANSITIONS[self.language][transition]
+            question=question_text(next_q,self.language) if next_q else ''
+        elif current['flow_stage']=='closing' and action=='advance':
             acknowledgement={'de':'Danke.','fr':'Merci.','it':'Grazie.','en':'Thank you.'}[self.language]
             question=question_text(next_q,self.language) if next_q else ''
         else:

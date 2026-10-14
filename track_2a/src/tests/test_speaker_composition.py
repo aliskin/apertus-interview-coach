@@ -9,7 +9,7 @@ import interview_controller as c
 
 class SpeakerCompositionTests(unittest.TestCase):
     def reply(self,language,ack,question_id='Q-02-01',support=False):
-        s=c.Session(language,c.POSTINGS['P-01'],c.make_plan(['Q-01-01',question_id]));s.start()
+        s=c.Session(language,c.POSTINGS['P-01'],c.make_plan(['Q-01-01',question_id]),pipeline='legacy');s.start()
         answer='OK.'
         analysis=dict(observations=[],answer_status='answered',missing_information='',support_quote=answer if support else '',company_question_quote='',resolved_record_ids=[],conflict_record_ids=[])
         with patch.object(c.model_client,'apertus',side_effect=[json.dumps(analysis),json.dumps(dict(acknowledgement=ack,question=''))]) as model:
