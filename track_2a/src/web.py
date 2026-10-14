@@ -304,7 +304,10 @@ def main():
     server.max_answers = args.max_answers
     server.provider, server.model = args.provider, args.model
     server.profile = experiment.load_profile(args.profile)
-    print(f'Interview practice: http://{args.host}:{args.port} ({args.provider})', flush=True)
+    browser_host='localhost' if args.host in ('0.0.0.0','::') else args.host
+    if ':' in browser_host:browser_host=f'[{browser_host}]'
+    browser_url=os.getenv('COACH_BROWSER_URL') or f'http://{browser_host}:{server.server_port}'
+    print(f'Interview practice: {browser_url} ({args.provider})', flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

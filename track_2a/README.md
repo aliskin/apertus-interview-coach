@@ -50,11 +50,13 @@ make web
 
 ## Other launch options
 
-Change the host port:
+Change the host port (also works with `make WEB_PORT=8082`):
 
 ```sh
 make web-demo WEB_PORT=8082
 ```
+
+The startup message shows the browser URL for the published host port. Inside Docker, the server continues listening on `0.0.0.0:8080`.
 
 For development with an already-installed model served by Ollama on the host:
 
