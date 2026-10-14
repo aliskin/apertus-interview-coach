@@ -1,6 +1,18 @@
 # Interview Coach — Implementation
 
-See the [project overview](../README.md) for the audience, scope, and challenge requirements.
+See the [project overview](../README.md) for the audience, features and challenge constraints.
+
+## Current architecture
+
+New sessions use `conversation_policy="baseline"`: the v8 conversation controller with the v10 verified multilingual recap and optional practice. Later `fixed` and `connected` policies remain experimental; saved sessions retain their stored policy.
+
+Code owns the question plan, stage, subtype, covered topics, main-question and follow-up counts. Apertus first analyses each answer for quoted evidence, completeness, a necessary missing detail, self-doubt and company-information requests. Code validates quotes and selects the action. A separate speaker request writes the contextual reaction or permitted clarification; code appends the next bank question when advancing. Company and support replies also use the speaker model. The same configured Apertus endpoint handles all roles.
+
+Browser interviews contain thirteen main questions. Eligible questions allow at most one clarification; small talk, candidate questions and closing do not. Recap can finish early. Recap in every language evaluates criterion-scoped transcript evidence, checks proposed gaps against complete question–answer pairs, and offers voluntary practice topics grounded in questions actually answered. An exercise is generated only after the user chooses a topic. Gap verification alone cannot assign an exercise. Independent evidence-backed positive assessments survive rejection of an unrelated gap; negative or dependent assessments are withheld. The verifier is another request to the same model, not an independent human judge. Literal quote checks do not establish correct interpretation.
+
+Question context includes actual spoken wording and separate planned wording. Older sessions recover preceding coach text if separate wording is unavailable. Invalid analysis supplies no fabricated evidence; invalid speaker output falls back to bank wording. Every attempted request and correction consumes the session budget. Code keeps the average below five coach calls per accepted interview/practice answer; recap request grouping adapts to the remaining budget. Transport and final-feedback failures are reported rather than presented as successful coaching.
+
+All scenario choices currently use an apprenticeship plan, including the first-job label. The answer hint uses translated fallback guidance. Automatic mastery-based question selection is deferred.
 
 ## Docker setup
 
@@ -62,71 +74,45 @@ python src/web.py --provider demo
 
 For direct Apertus use, export the provider variables in your shell first, then use `--provider apertus`. For direct Ollama use, use `--provider ollama --model llama3:8b`; its default endpoint is `http://127.0.0.1:11434`. No third-party Python packages are required.
 
-## Architecture and session flow
+## Deployment packaging
 
-```mermaid
-flowchart LR
-    UI[Web interface] --> API[Python session API]
-    API --> Controller[Interview controller]
-    Bank[Public question bank and posting] --> Controller
-    Controller --> Analysis[Apertus: evidence and missing information]
-    Analysis --> Decision[Code: follow up or advance]
-    Decision --> Speaker[Apertus: brief reply / permitted follow-up]
-    Speaker --> Controller
-    Controller --> Feedback[Apertus: final evidenced feedback]
-    Controller --> Store[Local session JSON]
-    Controller --> UI
+`src/run.sh` copies public runtime resources from `data/interview/` into the ignored Docker staging directory before building. The image contains Python application code, prompts, browser assets, public question/rubric resources and the optional review tool. It excludes credentials, model weights, generated sessions, experimental scripts, reports and review labels. For a direct build from this directory:
+
+```sh
+mkdir -p src/interview_data
+cp data/interview/*.json data/interview/*.jsonl src/interview_data/
+docker build -t apertus-interview-coach -f src/Dockerfile src
 ```
 
-The server selects a bank-question plan and owns stage, subtype, topic coverage and counters. For every interview answer, including introductions, an analysis request extracts at most three observations with exact candidate quotes, an answered/partial/unanswered status and missing information. Code validates quote presence, then permits one follow-up only for a partial/unanswered answer with a stated gap and remaining eligibility. A separate speaker request phrases a short, warm contextual reply. Strong self-doubt is routed to support; actual company-information requests are answered even outside the candidate-question stage. Evidence records preserve quotes, open gaps, clarifications and tentative conflicts for future recap work. Advancing always uses the exact next bank question. The same configured Apertus model handles analysis, speaking and final feedback; no judge runs in the live interview.
+Apertus is served separately through the configured remote API. This packaging does not verify the challenge's under-32-GB model-serving gate. Python 3.12 is the container runtime; no third-party Python or frontend packages are required.
 
-Current prompts are `src/prompts/session/analysis.<language>.txt`, `speaker.<language>.txt` and `feedback.<language>.txt` for German, French and Italian; English uses the unsuffixed files. `examples.<language>.json` supplies a small stage/action-selected set of demonstrations. Older `interviewer*` prompts are retained as the previous design and are no longer used by the controller. Analysis sees the actual question, stage/subtype, latest answer and dialogue. The speaker additionally receives the code action, validated analysis, public posting and next bank question. Final feedback still receives the whole actual transcript, eleven-criterion rubric and feedback guidelines. `guidance.<language>.json` localises those public rules; `instructions.json` supplies corrections and fixed responses. Simulator personas, annotations and scenario success criteria are excluded from coach input. Older `prompts/web/` are used only by the legacy stateless API.
+## Persistence and privacy
 
-## Data and privacy
+The server owns sessions. Clients send session IDs, revisions and answers; browser copies are for display. Sessions and traces are stored under ignored `data/sessions/`. Requests whose responses are lost or unreadable are retried once automatically. The latest accepted answer, recap attempt, practice selection or revision response is persisted with a request fingerprint; an exact retry replays that response without another model call or state change, including after a server restart. Other stale revisions remain rejected. Refresh starts a new session; login and shared conversation links are not implemented. Browser storage is optional: denied reads or writes do not interrupt practice. A failed write rolls back conversation state while retaining spent model-call accounting in memory and attempting an atomic accounting write. Persistent disk failure followed by a crash can still lose that accounting.
 
-Server-owned sessions, transcripts and request traces are persisted locally in ignored `data/sessions/`. The browser currently starts a fresh session on refresh; persisted sessions are not a login or share-link feature. Clear local session files when no longer needed. Answers are sent to the configured model provider. API keys remain server-side and model text is rendered as text, not HTML.
+Practice assignments, revised answers and revision feedback are included in the saved transcript and manual-review import. Practice turns are marked separately and excluded from original-interview evidence. Revision assessment receives the assigned exercise, the original answer and the most recent accepted answer; accepting a revision updates that comparison answer.
 
-The bundled server is intended for local use. Public authenticated hosting needs additional deployment work. Public runtime resources are in `data/interview/`; experimental tools and generated runs remain Git-ignored.
+If every attempted recap evaluation group fails, the interview answers remain saved and `complete` stays false. The interview itself has ended: retry only the recap, without resubmitting answers. Each attempt advances the session revision, so an explicit retry is distinct from replaying a lost response. Retries use the remaining session call budget; when exhausted, the interface disables recap retries and keeps download/restart available. A valid unassessed result is not a technical failure. If only some groups fail, the recap remains available with those criteria explicitly marked unavailable (`recap_status: partial`).
 
-## Tests and development results
+API credentials stay server-side. Answers are sent to the configured provider. The bundled server is intended for local use; authenticated public hosting requires additional work.
 
-From this directory, run:
+## Prompts and review
+
+The [prompt map](src/prompts/session/README.md) explains task files and their inputs. Public rules are under `data/interview/`; organiser scenario personas and reference annotations are not coach inputs.
+
+The [manual review tool](src/review/README.md) supports version navigation, whole-interview guideline labels, exact evidence highlights, draft/validated reviews, optional French/Italian translations and archiving. Run `make review-demo` for a fictional example or `make review` for existing imported data. Review code is published; generated datasets and labels remain ignored. Experimental inference runners remain local and are not deployment dependencies.
+
+## Verification and observed limits
 
 ```sh
 make test
 ```
 
-All 70 application tests pass. They cover progression bounds, conditional question selection, language-specific prompts, evidence validation, server-owned revisions/persistence and the retained legacy API. Model responses are mocked in these tests; passing tests does not establish coaching quality.
+Tests cover progression, evidence validation, actual-question context, persistence, lost-response recovery, conversation guards, optional practice, voice contracts and portable review storage. Dependency-free browser regression tests for denied storage and response retries can also be run with `node src/tests/browser_session.test.js` when Node.js is available. Model responses are mocked; tests do not prove coaching quality.
 
-The preceding v8 warmth/memory experiment completed the same ten highlighted organiser scenarios with a separate Apertus candidate simulator: 135 answers and 290 coach calls, including retries and final feedback, averaging 2.15 calls per answer (highest session average: 2.54). All ten assistant reviews are drafts for validation. Some replies are warmer, but copied demonstration wording, unanswered company questions and missed self-doubt support remain serious problems. No formal follow-ups or memory clarification/conflict links were produced. The preceding v7 run covered all 28 scenarios (1.73 calls per answer). This is not a fixed-answer causal comparison. See [technical_report.md](technical_report.md) for details.
+The current evaluation regenerates only final recaps for the 28 supplied German/French/Italian scenarios, reusing exactly the saved candidate answers and interviewer replies. English is available in the practice interface for debugging but is excluded from the review cohort. Conversation request costs are reused for equivalent session budgeting; newly generated recap calls are recorded separately. Simulator calls are not repeated. Reviews remain drafts; literal quote checks do not establish semantic correctness. Official benchmark scores and consumer-hardware VRAM remain unverified.
 
-Simulation/evaluation tools, generated runs and manual-review data are deliberately Git-ignored. A fresh clone includes the application, public runtime resources and application tests, but not those local experiments. Commands for private experiment scripts are therefore not part of the submission deployment instructions.
-
-## Session behaviour and limits
-
-Browser sessions start through `/api/session/start`. Clients send a session ID, revision and answer to `/api/answer` or `/api/recap`. Code stores the question plan, current stage/subtype, covered topics, main-question/follow-up counts, transcript and request traces. It updates stage context as the interview progresses.
-
-The browser plan has thirteen main questions, including interview closing, followed by feedback across all eleven FHGR criteria. Each eligible main question permits at most one follow-up; small talk, candidate questions and closing do not. Completing the plan triggers final feedback automatically. Recap ends early and asks the model to acknowledge unavailable evidence. An unsent answer can be included when requesting recap.
-
-The displayed answer ceiling is a conservative bound of twice the plan length (26); eligible-question restrictions make the actual maximum smaller. `MAX_ANSWERS` and `--max-answers` belong to the retained stateless API and do not change the browser controller's plan. The controller currently returns no generated hint, so the interface uses its translated fallback guidance. The first-job scenario label currently selects an apprenticeship posting and the same question plan, rather than a separate first-job interview.
-
-An interview answer normally makes two calls: analysis and speaker, each with at most one correction. Ordinary closing runs analysis then uses fixed thanks before final feedback; introductions now run analysis and speaker so self-doubt can receive support. Final feedback permits one correction. Code counts every attempted coach request, reserves two calls for feedback and enforces a session budget of `5 × accepted answers − 1`; retry attempts also consume it. Invalid analysis is recorded without invented evidence; invalid speaker output or insufficient budget advances using neutral bank wording. A validated distress quote permits a supportive fallback. Follow-ups cannot repeat a planned main question or an already-asked question. The policy applies to all four languages. Transport failures remain retryable errors, and failed final feedback is reported. No live judge is used.
-
-The v8 warmth/memory experiment keeps the supplied question plans and the existing recap prompt/renderer unchanged. It does not yet shorten interviews or feed stored evidence into final assessments.
-
-## Docker packaging and practicality
-
-`src/run.sh` copies the versioned public resources from `data/interview/` into ignored `src/interview_data/` before building. The image bundles the Python runtime, application, static interface, prompts and these resources. It excludes credentials, experiments, simulation profiles, annotations and generated outputs. Session files persist in the host's ignored `data/sessions/` directory through a bind mount. Run `make web` or `make web-demo` to prepare the build context; a bare Docker build from a fresh clone lacks the staged resource directory.
-
-The image is an application client; it does not install or serve Apertus weights. Hosted inference does not verify the under-32-GB VRAM requirement. A consumer-hardware Apertus deployment, quantisation/context settings and measured memory usage remain outstanding. The recorded hosted development run meets the call-efficiency threshold, but does not establish the complete practicality gate.
-
-## Local manual review (not included in a fresh clone)
-
-The developer's local portal runs on port 8081 and groups individual-answer v1/v2 and whole-interview v5/v6/v7/v8, plus six German hybrid v9 fixed-context comparisons. It preserves each version's labels separately, displays category summaries and draft/validated status, and links exact coach evidence to guideline notes. Originals are expanded by default, with collapsible AI-assisted English reading aids underneath. All four complete-interview versions have cached English transcript translations; originals remain authoritative.
-
-The v7 version highlights ten purposively selected cases with stars; all 28 draft reviews remain accessible. This shortlist covers all three languages and six scenario formats, and is not an unbiased sample for estimating failure rates.
-
-The portal and its data remain under ignored `src/experiments/` and `data/manual_review/`. The local `make review` target requires those files and is not a supported command for a clean submission checkout. The previous individual review servers have been replaced by this single portal.
+English question translations are stored separately in `src/prompts/session/questions.en.json`; the original organiser bank is unchanged. Translations need human review. Practice history is separated by language and scenario; a previous session in another language cannot supply its learning target.
 
 ## Voice integration contract
 
@@ -175,32 +161,3 @@ window.dispatchEvent(new CustomEvent('coach:transcription', {
 The browser rejects interim, stale-session, wrong-language, empty and over-4,000-character transcripts, and transcripts arriving while a request is pending or the session is complete. It does not overwrite an existing draft or submit automatically. The user reviews/edits the recognised text and presses Send. Only that confirmed text reaches the coach through the existing answer API; audio, confidence, accent and inferred voice traits are not sent or assessed.
 
 An audio adapter must obtain user permission before using the microphone or sending speech text to an additional service. It must register its listeners before session start, handle cancellation and choose a compatible voice for the language tag. The current server policy allows same-origin connections; using an external browser speech service needs an explicit deployment/privacy and content-security-policy decision. Voice adapters are not implemented or enabled by this change.
-
-The v8 version contains the same ten validation scenarios, with separate draft labels and evidence records in the analysis fold. Start validation with S-23 (missed strong-self-doubt support), S-07 or S-10 (copied demonstrations/company questions), and S-27 (unresolved occupation conflict). Older samples and labels are preserved.
-
-
-## German hybrid pipeline (v9)
-
-German sessions now dispatch to `src/hybrid.py`; English/French/Italian use the preceding v8 pipeline described above. Normal German turns use analysis plus interviewer/fact-selection, while support can be supplied by code. Advance acknowledgements are limited to 22 words, cannot contain an added question and reject selected forms of unsupported skill praise. Only clarification actions can generate a question; advancing uses the exact next bank question. Plans have at most 15 main questions and one clarification per eligible question. Automatic competency-based question skipping is not implemented.
-
-`hybrid_analysis.de.txt` extracts literal quotes, a specific gap, candidate requests and support needs. Quoted observations are not skill judgements. Code labels reported/hypothetical evidence and tracks unassessed/partial/evidence-available competencies; evidence availability is not mastery. A conservative German self-doubt pattern backs up model routing. Company requests use `hybrid_company.de.txt` to select explicit posting excerpts by fact ID, with unavailable parts acknowledged. This prevents free invented company rules, but selection can still be incomplete or irrelevant.
-
-Recap uses `hybrid_evaluator.de.txt` in up to three small criterion groups, with public rubric anchors and question-scoped evidence IDs. Short early recaps use one group. Scores without eligible evidence are rejected; voice/body-language assessment is unavailable for text, and unassessed entries cannot contain free-form judgements. Literal evidence checks cannot establish semantic validity. Feedback renders the actual quoted passages and question IDs.
-
-`hybrid_learning.de.txt` receives one code-selected lowest-scoring supported target, offering one concrete exercise, reflection and revision. Targets scored 3–4 are marked optional practice. Learner alignment is imperfect and needs validation. `/api/revise` uses `hybrid_revision.de.txt` to compare a revised answer against that target without replacing original scores. Interview and practice answers are separate counters; all attempted requests count against `5 × (interview answers + practice answers) − 1`.
-
-The German interface offers experience (`first_interview`/`some_practice`) and difficulty (`easy`/`standard`/`challenging`). These are passed as context; effects are not benchmarked. The browser remembers a previous session ID locally and supplies it when starting another session for the same scenario. The server restores up to three saved exercises only for the same posting, exposing the latest learning target. This is a minimal practice history, not a progress score, login or transcript-resume feature. `/api/session/start` also accepts these fields directly; server-owned session data remains authoritative.
-
-The six v9 review cases are independent frozen-context comparisons of S-07/S-12/S-23/S-24/S-25/S-26, reusing all 77 saved candidate answers. Each reply sees the original preceding v8 dialogue; changed clarification branches would be left unanswered rather than receiving an unrelated saved answer. No such branch was generated. Source questions in the portal are marked as context and are excluded from labelled output. The recap assesses the original candidate transcript. Recorded calls: 188 (2.44 per answer, max case average 2.77), including retries and evaluator/learning tasks. Five speaker fallbacks and one truncated evaluator group remain. Six assistant-authored reviews are drafts, with notes per guideline. They show improvement in support and evidence display but still flag unsupported interpretation in every case. They are not official or human-validated scores.
-
-Docker now includes `hybrid.py`; the image must be rebuilt before deployment. Final consumer-hardware VRAM verification remains outstanding.
-
-A recap after only greeting/arrival small talk uses a short deterministic acknowledgement: no scores, invented deficiency, learning task or revision target. This phase guard was added during live UI verification and does not affect the six substantive fixed-context comparisons.
-
-## Actual question tracking
-
-Candidate turns store the actual spoken question separately from the planned bank wording. Analysis and German recap question–answer pairs use actual wording; evidence includes it too. New coach turns store their question independently of the acknowledgement. Older sessions fall back to the saved preceding coach reply, with explicit provenance, and only use bank wording when history is unavailable. This fixes context handling, not generated-question purpose compliance. No additional model calls are introduced.
-
-## Failed-save call accounting
-
-A failed save rolls back conversation, progression and revision counters, while retaining spent model calls and traces in the in-memory session. The server tries an atomic write of the rollback accounting. This covers answers, recap and revisions; initial sessions are registered only after their save succeeds. If storage stays unavailable, accounting remains in memory but cannot survive a process crash without a successful write. No additional model calls are introduced.

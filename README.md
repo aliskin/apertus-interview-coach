@@ -10,7 +10,7 @@ An Apertus-based interview practice app for teenagers preparing for their first 
 - A thirteen-question browser interview covering introduction, motivation, strengths/weaknesses, situational questions, candidate questions and closing, followed by feedback.
 - Questions selected from the supplied FHGR bank, with at most one follow-up per eligible main question.
 - Early recap, feedback across eleven criteria and conversation downloads.
-- German hybrid practice: visible evidence, one learning exercise, answer revision and a saved learning target.
+- Hybrid practice in all four languages: visible evidence, voluntary topic selection, one learning exercise after choosing, answer revision and a saved learning target.
 - A neutral answer placeholder with optional help. The current controller does not generate contextual hints; the interface uses its translated fallback guidance.
 - Responsive desktop/mobile layouts and demo mode without model calls.
 - Voice adapter hooks: ordered speech output and confirmed-transcript input; actual audio services are not included.
@@ -50,16 +50,15 @@ flowchart LR
     Answer[Candidate answer] --> Analysis[Apertus: quoted evidence and intent]
     Analysis --> Controller[State machine: action and bank question]
     Controller --> Interviewer[Apertus: acknowledgement or clarification]
-    Controller --> Company[Select explicit posting facts]
-    Controller --> Support[Code: supportive response]
     Controller --> Evaluator[Recap: rubric and eligible transcript evidence]
-    Evaluator --> Learning[One exercise, reflection and optional revision]
+    Evaluator --> Verify[Verify proposed gaps against complete answers]
+    Verify --> Learning[Approved exercise or voluntary topic choice]
     Learning --> History[Saved learning target for next session]
 ```
 
-German sessions use the hybrid controller in `src/hybrid.py`. Code owns question selection, progression and termination; Apertus handles analysis, short conversational replies, fact selection, assessment and learning support. Company replies show selected original posting facts. Strong self-doubt has a conservative text-trigger fallback and a supportive response. Final feedback displays source quotations and question IDs, followed by one learning exercise and reflection. German users can revise an answer and carry their last learning target into another session for the same profession.
+All four languages use the same default pipeline in `src/interview_controller.py`: Apertus analyses each answer and writes a contextual reaction; code supplies the next bank question. Recap, verification, optional practice and revision use the shared logic in `src/hybrid.py`, with task prompts and fixed interface text in the session language. English questions include a translated supplement to the organiser bank. Later fixed-hybrid and connected conversation policies remain German-only experiments and are not defaults.
 
-English, French and Italian retain the earlier v8 pipeline. Main questions keep bank wording; competency availability is tracked, but automatic skipping and mastery-based selection are deferred. Experience/difficulty settings are supplied as context; their effectiveness has not been evaluated. Each task permits at most one correction. Code caps counted calls below five per accepted interview/practice answer across the session. A full German recap normally uses three small evaluator groups and one learning call; early recaps use fewer groups to fit the budget. Exact quotations and fact selection do not guarantee correct interpretation or relevance.
+Main questions keep bank wording; competency availability is tracked, but automatic skipping and mastery-based selection are deferred. Each task permits at most one correction. Code caps counted calls below five per accepted interview/practice answer across the session. Full recaps isolate criteria in small requests; early recaps use fewer groups to fit the budget. Proposed gaps receive a separate verification request. A learning call runs only after an explicit voluntary topic choice, using the selected question and original answer without rejected proposal text. Gap verification cannot automatically assign an exercise. Rejecting a gap withholds dependent or negative assessments while retaining explicitly independent, quote-backed positive assessments. Exact quotations do not guarantee correct interpretation or relevance.
 
 For future voice support, responses expose language-tagged speech segments and turn IDs. Browser events support playback cancellation and recognised text as an editable answer draft. No microphone or audio playback is enabled; model responses arrive in full rather than streaming. See the [voice integration contract](track_2a/README.md#voice-integration-contract).
 
@@ -77,9 +76,11 @@ make test
 python src/web.py --provider demo
 ```
 
-All 59 application tests pass. The latest German hybrid comparison reuses 77 saved candidate answers from six scenarios, with the exact preceding v8 conversation for each independent response: 188 coach calls, averaging 2.44 per answer (highest case average 2.77). This is a fixed-context response comparison, not a coherent new full interview or a validated benchmark. Six reviews remain drafts. Support and visible evidence improve, but repetitive transitions, incomplete company replies and unsupported assessment interpretations persist. The earlier v7/v8 runs and labels are preserved.
+The current evaluation replays final recaps on the same 28 organiser conversations (20 German, five French and three Italian). English remains available in the practice interface for debugging and is excluded from the current review set. Candidate answers are generated by a separate simulator; its calls are excluded from coach accounting. Whole-interview guideline labels are drafts for human validation, not an official benchmark. Shared functionality does not establish equivalent coaching quality across languages.
 
-The challenge weights performance at 50%, consistency at 25% and innovation at 25%, with practicality as a required gate. Recorded call efficiency is below five calls per answer, but hosted inference does not establish operation below 32 GB VRAM. Grounding, candidate-question handling, repetition and follow-up selection remain weaknesses. See the [technical report](track_2a/technical_report.md) for measurements, review findings and limitations.
+Run `make -C track_2a review-demo` for the fictional review demonstration, or follow the [manual review guide](track_2a/src/review/README.md) to import completed sessions, label guidelines, cite evidence and save drafts. The tool makes no model calls; optional translation preparation is separate.
+
+The challenge weights performance at 50%, consistency at 25% and innovation at 25%, with practicality as a required gate. Recorded call efficiency is below five calls per answer, but hosted inference does not establish operation below 32 GB VRAM. Grounding, candidate-question handling, repetition and follow-up selection remain weaknesses.
 
 ## Repository
 
@@ -89,10 +90,10 @@ The challenge weights performance at 50%, consistency at 25% and innovation at 2
 | `track_2a/src/` | Web server, controller, model clients, prompts, interface and tests |
 | `track_2a/data/interview/` | Public runtime questions, fictional postings, rubric and guidelines |
 | `track_2a/Makefile` | Web launch and test commands |
-| [track_2a/technical_report.md](track_2a/technical_report.md) | Approach, visual architecture and development results |
+| [Manual review guide](track_2a/src/review/README.md) | Portable review interface, imports, translations and draft labels |
 | `environment.yml` | Optional Conda environment |
 
-Credentials, sessions, experimental tooling, generated runs and manual-review labels remain local and are excluded from the published application. The local review interface is not a submission dependency.
+Credentials, sessions, experimental tooling, generated runs and manual-review labels remain local. Reusable review code and its documentation are published alongside the application.
 
 ## License
 
