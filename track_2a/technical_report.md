@@ -45,7 +45,7 @@ The interface exposes ordered, language-tagged speech segments and browser event
 - **How it is used:** Inference for answer analysis, conversational delivery, recap evaluation, proposal verification, optional learning and answer revision. No fine-tuning, adapters or separate judge model run in the live application.
 - **Where it runs:** A remote OpenAI-compatible chat-completions endpoint. Credentials and the endpoint are server-side environment configuration; they are not sent to the browser.
 
-The opening is selected in code without a model request. A normal answer uses an analysis request and a speaker request. Analysis receives actual question wording, stage/subtype, the answer, dialogue and prior evidence. Code checks exact quotes and selects advancement, clarification, company reply or supportive acknowledgement. The speaker receives the permitted action, posting context and next bank question. Language-specific instructions and small demonstrations guide output; validated model text still requires semantic review.
+The opening is selected in code without a model request. A substantive answer normally uses an analysis request and a speaker request. Ordinary, adequately answered greetings and self-introductions in German, French and Italian use a fixed translated transition after analysis, avoiding a speaker request. Concerns, company questions and incomplete introductions retain model handling. English remains model-driven for debugging. The generic trial-day advancement demonstration is omitted from speaker prompts. Analysis receives actual question wording, stage/subtype, the answer, dialogue and prior evidence. Code checks exact quotes and selects advancement, clarification, company reply or supportive acknowledgement. The speaker receives the permitted action, posting context and next bank question. Language-specific instructions and small demonstrations guide output; validated model text still requires semantic review.
 
 Recap uses criterion-scoped requests, with smaller groups when budget allows. Public rubric definitions, feedback guidelines, complete answers and eligible evidence IDs are supplied. A separate request verifies proposed gaps when proposals exist. Recap makes no automatic learning request. Explicit practice selection generates an exercise; subsequent revisions use the saved exercise and preceding accepted answer. Prompts are mapped in [src/prompts/session/README.md](src/prompts/session/README.md).
 
@@ -77,7 +77,7 @@ The retained full-interview source cohort covers all 28 scenarios, including suc
 | Latest recap-only evaluation | Recaps returned / sessions with voluntary topics | 28 / 28 |
 | Latest recap-only evaluation | Automatically assigned exercises | 0 |
 | Latest recap-only evaluation | Unavailable criterion groups | 22 |
-| Current code regression checks | Python tests / JavaScript checks passed | 149 / 9 |
+| Current code regression checks | Python tests / JavaScript checks passed | 159 / 11 |
 | Independent baseline and official benchmark | Performance and consistency scores | Not measured |
 
 Results show bounded model usage, end-to-end coverage of the supplied situations and explicit user control over practice. Reviews found generally courteous language and useful occupation-specific questions. Visible citations improve traceability, but do not establish that an assessment follows from its evidence.
@@ -99,7 +99,7 @@ Recorded comparison details and per-case source hashes are local under `data/run
 
 ## 7. Reproducibility
 
-The implementation reviewed for this report is commit `bfa79d8` (`Finalize multilingual coach and recoverable practice sessions`); this report and other pending documentation changes are not part of that code commit. The saved-conversation evaluation predates it and records its own source hashes. Generated traces and experimental runners are local and ignored by Git, so the published repository alone does not reproduce the historical evaluation cohort or its draft labels. Model sampling and candidate simulation were not controlled for a reproducible multi-seed comparison.
+The implementation reviewed for this report is commit `bfa79d8` (`Finalize multilingual coach and recoverable practice sessions`); the fixed-opening transitions and other pending application/documentation changes described here are not part of that code commit. The saved-conversation evaluation predates it and records its own source hashes. Generated traces and experimental runners are local and ignored by Git, so the published repository alone does not reproduce the historical evaluation cohort or its draft labels. Model sampling and candidate simulation were not controlled for a reproducible multi-seed comparison.
 
 Install Docker Desktop or a compatible engine. From `track_2a`, configure the following in ignored `data/.env`, using the provider's actual API base URL and Apertus model ID:
 
