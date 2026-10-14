@@ -77,7 +77,20 @@
     "stage_situational": "Situational questions",
     "stage_candidate_questions": "Your questions",
     "stage_closing": "Closing",
-    "stage_feedback": "Feedback"
+    "stage_feedback": "Feedback",
+    "priorPractice": "From your last practice: ",
+    "optionalPractice": "Optional practice",
+    "optionalPracticeHelp": "Choose a topic yourself. This is not an identified weakness.",
+    "choosePractice": "Practise this topic",
+    "revisionLabel": "Try your answer again",
+    "revisionHelp": "Use the next step from your feedback. Take your time to revise your answer.",
+    "sendRevision": "Send revised answer",
+    "practiceReady": "Your optional exercise is ready.",
+    "practiceUnavailable": "The exercise is currently unavailable.",
+    "practiceError": "That did not work. Please try again.",
+    "revisionWorking": "Looking at your learning step…",
+    "revisionSaved": "Your revised answer has been saved.",
+    "revisionError": "That did not work. Your answer is still here; please try again."
   },
   "de": {
     "title": "First Step · Bewerbungsgespräch üben",
@@ -157,7 +170,20 @@
     "stage_situational": "Situationsfragen",
     "stage_candidate_questions": "Deine Fragen",
     "stage_closing": "Abschluss",
-    "stage_feedback": "Feedback"
+    "stage_feedback": "Feedback",
+    "priorPractice": "Aus deiner letzten Übung: ",
+    "optionalPractice": "Freiwillig weiterüben",
+    "optionalPracticeHelp": "Wähle selbst ein Thema. Das ist keine festgestellte Schwäche.",
+    "choosePractice": "Dieses Thema üben",
+    "revisionLabel": "Probiere deine Antwort noch einmal",
+    "revisionHelp": "Nutze den nächsten Schritt aus deinem Feedback. Du kannst die Antwort in Ruhe überarbeiten.",
+    "sendRevision": "Überarbeitete Antwort senden",
+    "practiceReady": "Deine freiwillige Übung ist bereit.",
+    "practiceUnavailable": "Die Übung ist gerade nicht verfügbar.",
+    "practiceError": "Das hat gerade nicht geklappt. Versuche es erneut.",
+    "revisionWorking": "Wir schauen auf deinen Lernschritt …",
+    "revisionSaved": "Deine Überarbeitung wurde gespeichert.",
+    "revisionError": "Das hat gerade nicht geklappt. Deine Antwort bleibt hier; versuche es erneut."
   },
   "fr": {
     "title": "First Step · Préparer un entretien",
@@ -237,7 +263,20 @@
     "stage_situational": "Mises en situation",
     "stage_candidate_questions": "Tes questions",
     "stage_closing": "Conclusion",
-    "stage_feedback": "Feedback"
+    "stage_feedback": "Feedback",
+    "priorPractice": "Lors de ton dernier entraînement : ",
+    "optionalPractice": "Continuer si tu le souhaites",
+    "optionalPracticeHelp": "Choisis toi-même un thème. Ce n’est pas une faiblesse constatée.",
+    "choosePractice": "Travailler ce thème",
+    "revisionLabel": "Essaie de répondre à nouveau",
+    "revisionHelp": "Utilise la prochaine étape de ton retour. Prends ton temps pour retravailler ta réponse.",
+    "sendRevision": "Envoyer la réponse retravaillée",
+    "practiceReady": "Ton exercice facultatif est prêt.",
+    "practiceUnavailable": "L’exercice n’est pas disponible pour le moment.",
+    "practiceError": "Cela n’a pas fonctionné. Réessaie.",
+    "revisionWorking": "Nous regardons ton progrès…",
+    "revisionSaved": "Ta réponse retravaillée a été enregistrée.",
+    "revisionError": "Cela n’a pas fonctionné. Ta réponse reste ici ; réessaie."
   },
   "it": {
     "title": "First Step · Preparati al colloquio",
@@ -317,6 +356,19 @@
     "stage_situational": "Situazioni",
     "stage_candidate_questions": "Le tue domande",
     "stage_closing": "Conclusione",
-    "stage_feedback": "Feedback"
+    "stage_feedback": "Feedback",
+    "priorPractice": "Dalla tua ultima esercitazione: ",
+    "optionalPractice": "Continuare se vuoi",
+    "optionalPracticeHelp": "Scegli tu un tema. Non è una debolezza rilevata.",
+    "choosePractice": "Esercitati su questo tema",
+    "revisionLabel": "Prova di nuovo a rispondere",
+    "revisionHelp": "Usa il prossimo passo del riscontro. Prenditi il tempo per rivedere la risposta.",
+    "sendRevision": "Invia la risposta rivista",
+    "practiceReady": "Il tuo esercizio facoltativo è pronto.",
+    "practiceUnavailable": "L’esercizio non è disponibile al momento.",
+    "practiceError": "Non ha funzionato. Riprova.",
+    "revisionWorking": "Stiamo guardando il tuo progresso…",
+    "revisionSaved": "La tua risposta rivista è stata salvata.",
+    "revisionError": "Non ha funzionato. La tua risposta rimane qui; riprova."
   }
 }

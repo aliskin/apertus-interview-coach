@@ -18,6 +18,7 @@ POSTINGS = records(DATA / 'postings.jsonl')
 RUBRIC = json.loads((DATA / 'criteria.json').read_text())
 GUIDELINES = json.loads((DATA / 'feedback_guidelines.json').read_text())
 SMALLTALK = json.loads((PROMPTS / 'smalltalk.json').read_text())
+QUESTION_VARIANTS_DE = json.loads((PROMPTS / 'question_variants.de.json').read_text())
 INSTRUCTIONS = json.loads((PROMPTS / 'instructions.json').read_text())
 GUIDANCE = {language: json.loads((PROMPTS / f'guidance.{language}.json').read_text())
             for language in INSTRUCTIONS}
@@ -109,12 +110,40 @@ ENGLISH_DEFAULTS = {
  'Q-10-01':'Is there anything else you would like to tell us?',
 }
 
+ENGLISH_QUESTIONS=json.loads((PROMPTS/'questions.en.json').read_text()) if (PROMPTS/'questions.en.json').exists() else {}
+
 def question_text(q, language):
     # Online practice keeps the supplied bank intact and overrides the travel opener.
     smalltalk_key=q.get('smalltalk_key', SMALLTALK['default'] if q['id']=='Q-01-01' else None)
     if smalltalk_key is not None:return SMALLTALK['questions'][smalltalk_key][language]
-    if language=='en': return q['text'].get('en', ENGLISH_DEFAULTS.get(q['id'],q['text']['de']))
+    if language=='en': return q['text'].get('en', ENGLISH_DEFAULTS.get(q['id']) or ENGLISH_QUESTIONS[q['id']])
     return q['text'][language]
+
+
+def approved_question_variants(question,language):
+    """Code-owned alternatives preserve the selected question purpose."""
+    variants=[]
+    if language=='de':
+        variants=QUESTION_VARIANTS_DE.get(question['id'],[])
+    return list(dict.fromkeys([question_text(question,language)]+variants))
+
+def question_spans(text):
+    # Whole stored questions preserve abbreviations; spans recover older replies with acknowledgements.
+    return list(dict.fromkeys([text.strip()]+[q.strip() for q in re.findall(r'[^.!?\n]*\?',text) if q.strip()]))
+
+def asked_question_texts(transcript):
+    return [q for turn in transcript if turn['role']=='assistant' and turn.get('stage')!='feedback'
+            for q in question_spans(turn.get('actual_question') or turn['content'])]
+
+def question_repeated(question,transcript,language):
+    normal=lambda text:re.sub(r'[^\w]+',' ',text.casefold()).strip()
+    proposed=normal(question);past={normal(q) for q in asked_question_texts(transcript)}
+    if proposed in past:return True
+    if language=='de':
+        for q in QUESTIONS.values():
+            forms={normal(text) for text in approved_question_variants(q,language)}
+            if proposed in forms and forms & past:return True
+    return False
 
 
 def answered_question_context(transcript, position, question, language):
@@ -149,8 +178,15 @@ class Session:
     company_answers: list = field(default_factory=list)
     learning_target: dict | None = None
     practice_history: list = field(default_factory=list)
+    conversation_policy: str = 'baseline'
+    question_status: dict = field(default_factory=dict)
+    topic_run: int = 0
+    speaker_reactions: list = field(default_factory=list)
     support_offered: bool = False
+    practice_events: int = 0
     practice_answers: int = 0
+    recap_attempts: int = 0
+    recap_status: str = 'not_requested'
     prior_learning_targets: list = field(default_factory=list)
     index: int = 0
     current_stage: str = 'introduction'
@@ -170,19 +206,20 @@ class Session:
     answer_analyses: list = field(default_factory=list)
     turn_decisions: list = field(default_factory=list)
     evidence_records: list = field(default_factory=list)
+    last_web_request: dict | None = None
 
     def is_hybrid(self):
-        return self.language == 'de' and self.pipeline != 'legacy'
+        return self.language in GUIDANCE and self.pipeline != 'legacy'
 
     def revise(self, text):
-        if not self.is_hybrid(): raise ValueError('Answer revision currently supports German only.')
+        if not self.is_hybrid(): raise ValueError('Answer revision requires the hybrid pipeline.')
         import hybrid
         return hybrid.revise(self, text)
 
     def start(self):
         if not self.plan: raise ValueError('Empty interview plan.')
         if self.experience not in ('first_interview','some_practice') or self.difficulty not in ('easy','standard','challenging'): raise ValueError('Invalid interview configuration.')
-        if self.is_hybrid() and len(self.plan)>15: raise ValueError('Hybrid plans allow at most 15 main questions.')
+        if self.is_hybrid() and self.conversation_policy!='baseline' and len(self.plan)>15: raise ValueError('Hybrid plans allow at most 15 main questions.')
         self.set_question(self.plan[0]); self.main_question_count=1
         openings={'de':'Hallo! Wir üben ein Bewerbungsgespräch. Zuerst lernen wir uns kennen. Dann sprechen wir über die Lehre. Am Schluss kannst du Fragen stellen und bekommst Feedback.',
         'fr':'Bonjour ! Nous allons pratiquer un entretien. Nous faisons connaissance, puis parlons de l’apprentissage. À la fin, tu peux poser tes questions et recevoir du feedback.',
@@ -205,7 +242,7 @@ class Session:
         self.current_stage=q['flow_stage'];self.question_subtype=q['subtopic']
 
     def state(self):
-        return {k:getattr(self,k) for k in ('prior_learning_targets','conversation_state','competencies','practice_answers','current_stage','question_subtype','covered_topics','main_question_count','followup_count','current_followups','answers','model_calls','complete')}
+        return {'revision':self.answers+self.practice_answers+self.practice_events+self.recap_attempts,**{k:getattr(self,k) for k in ('recap_status','roleplay_finished','prior_learning_targets','conversation_state','competencies','practice_answers','current_stage','question_subtype','covered_topics','main_question_count','followup_count','current_followups','answers','model_calls','complete')}}
 
     def call(self,messages,schema,validator,max_tokens,task='feedback',reserve=0):
         # One initial request plus one bounded correction; every attempt is counted.
@@ -225,7 +262,12 @@ class Session:
                 messages=messages+[{'role':'user','content':INSTRUCTIONS[self.language]['correction']}]
 
     def answer(self,text,recap=False):
-        if self.is_hybrid():
+        if self.roleplay_finished and not self.complete:
+            if recap and not text:return self.finish()
+            raise ValueError('The interview has ended. Retry the recap without another answer.')
+        # Shared v8 conversation with verified hybrid recap/revision in every language.
+        if self.is_hybrid() and self.conversation_policy!='baseline':
+            if self.language!='de':raise ValueError('Experimental conversation policies currently support German only.')
             import hybrid
             return hybrid.answer(self,text,recap)
         if self.complete: raise ValueError('Session is complete.')
@@ -268,7 +310,7 @@ class Session:
                     normal=lambda value:re.sub(r'[^\w]+',' ',value.casefold()).strip()
                     proposed=normal(p['question'])
                     # A main question must never be recycled as a follow-up.
-                    if proposed in [normal(question_text(q,self.language)) for q in self.plan]:raise ValueError('Follow-up duplicates a planned main question.')
+                    if proposed in [normal(text) for question in self.plan for text in approved_question_variants(question,self.language)]:raise ValueError('Follow-up duplicates a planned main question.')
                     if any(proposed and proposed in normal(t['content']) for t in self.transcript if t['role']=='assistant'):raise ValueError('Repeated question.')
             try:
                 p=self.call(messages,SPEAKER_SCHEMA,validate,450,task='speaker',reserve=2)

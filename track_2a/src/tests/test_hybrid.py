@@ -5,9 +5,17 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import interview_controller as c
 import hybrid as h
 
+def evaluator_packet(packet):
+ if 'criteria' not in packet:return packet
+ rows=json.loads(json.dumps(packet['criteria']));proposals=[]
+ for key,row in rows.items():
+  improvement=row.pop('improvement',h.no_improvement())
+  if improvement['usefulness']=='useful':proposals.append(dict(criterion_key=key,**improvement))
+ return {'criteria':rows,'improvements':proposals}
+
 class HybridTests(unittest.TestCase):
  def session(self,ids):
-  s=c.Session('de',c.POSTINGS['P-01'],c.make_plan(ids));s.start();return s
+  s=c.Session('de',c.POSTINGS['P-01'],c.make_plan(ids));s.conversation_policy='fixed';s.start();return s
  def analysis(self,text,status='sufficient',gap='',requests=None):
   return dict(quotes=[text],status=status,gap=gap,requests=requests or [],support_quote='',resolves=[],conflicts=[])
  def test_self_doubt_is_supported_even_if_model_misses_trigger(self):
@@ -27,24 +35,24 @@ class HybridTests(unittest.TestCase):
   s=self.session(['Q-SIT-02']);s.transcript.append({'role':'user','content':'Ich würde nachfragen.','question_id':'Q-SIT-02'});s.answers=1
   allowed=h.eligible_evidence(s);self.assertTrue(allowed['communication']);self.assertTrue(all(e['kind']=='hypothetical' for e in allowed['communication'].values()))
   s.transcript[-1]['question_id']='Q-OTH-03';self.assertFalse(h.eligible_evidence(s)['difficult_questions']);self.assertFalse(h.eligible_evidence(s)['demeanor'])
- def test_recap_displays_evidence_and_has_one_learning_target(self):
+ def test_recap_displays_evidence_and_waits_for_explicit_practice_choice(self):
   s=self.session(['Q-03-01']);text='Ich mag Technik.';s.transcript.append({'role':'user','content':text,'question_id':'Q-03-01'});s.answers=1
-  allowed=h.eligible_evidence(s);packet={'criteria':{k:dict(score=None,evidence_ids=[],explanation='Nicht ausreichend beurteilt.') for k in allowed}}
-  key=next(k for k,v in allowed.items() if v);eid=next(iter(allowed[key]));packet['criteria'][key]=dict(score=2,evidence_ids=[eid],explanation='Das Interesse ist genannt, der Bezug zum Beruf bleibt offen.')
-  learning=dict(explanation='Du kannst deinen Bezug zum Beruf ergänzen.',exercise='Schreibe eine Tätigkeit auf und erkläre in einem Satz, weshalb sie dich interessiert.',reflection='Welche Tätigkeit interessiert dich?',revision_prompt='Formuliere deine Antwort noch einmal.',encouragement='Du darfst in Ruhe weiterüben.')
-  with patch.object(c.model_client,'apertus',side_effect=[json.dumps(packet),json.dumps(learning)]):r=s.finish()
-  self.assertIn('„Ich mag Technik.“',r['reply']);self.assertEqual(s.requests[-2]['task'],'evaluator');self.assertEqual(s.requests[-1]['task'],'learning');self.assertEqual(len(s.practice_history),1);self.assertEqual(s.practice_history[0]['criterion'],key);self.assertTrue(r['can_revise']);self.assertLess(s.model_calls/s.answers,5)
+  allowed=h.eligible_evidence(s);packet={'criteria':{k:dict(score=None,evidence_ids=[],explanation='Nicht ausreichend beurteilt.',improvement=h.no_improvement()) for k in allowed}}
+  key='motivation';eid=next(iter(allowed[key]));packet['criteria'][key]=dict(score=2,evidence_ids=[eid],explanation='Das Interesse ist genannt.',improvement=dict(usefulness='useful',missing_detail='Konkrete Tätigkeit',why_needed='Die Frage fragt nach dem Berufsinteresse.',already_supplied=False,expected_outcome='Interesse mit einer Tätigkeit verbinden.',question_id='Q-03-01'))
+  learning=dict(target_id='gap:'+key,explanation='Du kannst deinen Bezug zum Beruf ergänzen.',exercise='Schreibe eine Tätigkeit auf und erkläre in einem Satz, weshalb sie dich interessiert.',reflection='Welche Tätigkeit interessiert dich?',revision_prompt='Formuliere deine Antwort noch einmal.',encouragement='Du darfst in Ruhe weiterüben.')
+  with patch.object(c.model_client,'apertus',side_effect=[json.dumps(evaluator_packet(packet)),json.dumps({'checks':{'gap:'+key:dict(decision='supported',reason='Eine Tätigkeit fehlt.',evidence_ids=[eid])}}),json.dumps(learning)]):r=s.finish()
+  self.assertIn('„Ich mag Technik.“',r['reply']);self.assertEqual([x['task'] for x in s.requests],['evaluator','verify']);self.assertEqual(s.practice_history,[]);self.assertIsNone(s.learning_target);self.assertFalse(r['can_revise']);self.assertEqual(r['optional_practice_choices'][0]['target_id'],'optional:motivation');self.assertLess(s.model_calls/s.answers,5)
+
  def test_learning_unavailable_is_transparent_not_fabricated(self):
-  s=self.session(['Q-03-01']);s.answers=1;s.transcript.append({'role':'user','content':'Technik.','question_id':'Q-03-01'})
-  packet={'criteria':{k['key']:dict(score=None,evidence_ids=[],explanation='Nicht beurteilt.') for k in c.RUBRIC['criteria']}}
-  with patch.object(c.model_client,'apertus',side_effect=[json.dumps(packet),'{}','{}']):r=s.finish()
-  self.assertIn('nicht verfügbar',r['reply']);self.assertFalse(r['can_revise'])
+  s=self.session(['Q-03-01']);s.answers=1
+  with patch.object(c.model_client,'apertus',return_value='{}'):result=h.learn(s,{'target_id':'gap:motivation','key':'motivation'})
+  self.assertIn('nicht verfügbar',result['explanation']);self.assertFalse(result['exercise'])
  def test_score_cannot_use_other_criterion_evidence(self):
   s=self.session(['Q-03-01']);s.answers=1;s.transcript.append({'role':'user','content':'Technik.','question_id':'Q-03-01'})
-  packet={'criteria':{k['key']:dict(score=None,evidence_ids=[],explanation='Nicht beurteilt.') for k in c.RUBRIC['criteria']}};packet['criteria']['difficult_questions']=dict(score=4,evidence_ids=['candidate-1:quote-1'],explanation='Gut.')
+  packet={'criteria':{k['key']:dict(score=None,evidence_ids=[],explanation='Nicht beurteilt.',improvement=h.no_improvement()) for k in c.RUBRIC['criteria']}};packet['criteria']['difficult_questions']=dict(score=4,evidence_ids=['candidate-1:quote-1'],explanation='Gut.')
   goodlearning=dict(explanation='Danke für die Übung.',exercise='',reflection='',revision_prompt='',encouragement='Übe in deinem Tempo.')
-  with patch.object(c.model_client,'apertus',side_effect=[json.dumps(packet),json.dumps(packet),json.dumps(goodlearning)]):s.finish()
-  self.assertTrue(all(x['score'] is None for x in s.feedback['criteria']));self.assertIn('evaluation_unavailable',[x['action'] for x in s.validation_warnings])
+  with patch.object(c.model_client,'apertus',side_effect=[json.dumps(evaluator_packet(packet)),json.dumps(evaluator_packet(packet)),json.dumps(goodlearning)]):s.finish()
+  self.assertIsNone(s.feedback);self.assertFalse(s.complete);self.assertEqual(s.recap_status,'unavailable');self.assertIn('evaluation_unavailable',[x['action'] for x in s.validation_warnings])
  def test_revision_keeps_assessment_and_counts_calls(self):
   s=self.session(['Q-03-01']);s.complete=True;s.answers=2;s.learning_target={'key':'motivation','evidence_records':[]};before=copy.deepcopy(s.feedback)
   with patch.object(c.model_client,'apertus',return_value=json.dumps({'reply':'Jetzt nennst du eine konkrete Tätigkeit. Übe weiter.'})):r=s.revise('Ich möchte technische Zeichnungen erstellen.')
@@ -62,7 +70,7 @@ class HybridTests(unittest.TestCase):
    self.assertEqual(code,200);self.assertEqual(data['state']['practice_answers'],1);self.assertEqual(server.sessions[identifier].answers,2)
    code,new=request('/api/session/start',{'previous_session_id':identifier,'experience':'some_practice','difficulty':'easy'})
    self.assertEqual(code,200);self.assertEqual(new['state']['prior_learning_targets'][0]['exercise'],'Nenne eine Tätigkeit.')
-   self.assertEqual(server.sessions[new['session_id']].difficulty,'easy');self.assertEqual(server.sessions[new['session_id']].experience,'some_practice')
+   self.assertEqual(server.sessions[new['session_id']].difficulty,'standard');self.assertEqual(server.sessions[new['session_id']].experience,'first_interview')
  def test_smalltalk_only_recap_does_not_invent_a_learning_deficit(self):
   s=self.session(['Q-01-01']);s.answers=1;s.transcript.append({'role':'user','content':'Ja, danke.','question_id':'Q-01-01'})
   with patch.object(c.model_client,'apertus') as model:r=s.finish()

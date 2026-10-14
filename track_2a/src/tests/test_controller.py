@@ -78,7 +78,8 @@ class ControllerTests(unittest.TestCase):
     status,result=request('/api/answer',payload);self.assertEqual(status,200)
    self.assertEqual(result['state']['answers'],2);self.assertEqual(result['state']['model_calls'],5)
    self.assertEqual(result['speech']['session_id'],sid);self.assertNotEqual(result['speech']['turn_id'],opening['speech']['turn_id'])
-   self.assertEqual(request('/api/answer',payload)[0],400)
+   self.assertEqual(request('/api/answer',payload),(200,result))
+   self.assertEqual(request('/api/answer',{**payload,'answer':'A different answer'})[0],400)
    saved=json.loads((Path(folder)/'data/sessions'/f'{sid}.json').read_text());self.assertEqual(saved['answers'],2);self.assertEqual(saved['model_calls'],5)
 
  def test_localized_guidance_covers_same_rubric_and_rules(self):

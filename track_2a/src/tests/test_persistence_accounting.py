@@ -43,3 +43,41 @@ class PersistenceAccountingTests(unittest.TestCase):
    return dict(reply='Revision feedback',state=s.state())
   with patch.object(c.Session,'revise',revise),patch.object(handler,'persist_session',side_effect=OSError('disk full')),self.assertRaises(OSError):handler.controlled_request(dict(session_id=sid,revision=0,answer='Test'),'de','it')
   self.assertEqual(original.model_calls,1);self.assertEqual(original.practice_answers,0);self.assertEqual(getattr(original,'practice_events',0),0)
+
+ def test_lost_response_is_replayed_after_restart_without_model_calls(self):
+  original,sid,handler=self.fixture();payload=dict(session_id=sid,revision=0,answer='Test')
+  with tempfile.TemporaryDirectory() as folder,patch.object(c,'ROOT',Path(folder)):
+   with patch.object(c.Session,'answer',lambda session,*args,**kwargs:self.spend(session,*args,**kwargs)),patch.object(handler,'send',side_effect=BrokenPipeError('response lost')):
+    with self.assertRaises(BrokenPipeError):handler.controlled_request(payload,'de','it')
+   restored=c.Session(**json.loads((Path(folder)/'data/sessions'/f'{sid}.json').read_text()))
+   handler.server.sessions[sid]=restored;responses=[];handler.send=lambda *args:responses.append(args)
+   with patch.object(c.Session,'answer') as answer,patch.object(handler,'persist_session') as persist:
+    handler.controlled_request(payload,'de','it')
+   answer.assert_not_called();persist.assert_not_called()
+  self.assertEqual(responses[0],(200,restored.last_web_request['response']))
+  self.assertEqual(restored.answers,1);self.assertEqual(restored.model_calls,2)
+ def test_recap_retry_replays_even_when_session_is_complete(self):
+  original,sid,handler=self.fixture();handler.path='/api/recap';responses=[];handler.send=lambda *args:responses.append(args)
+  def finish(s,*args,**kwargs):
+   s.complete=True;s.model_calls+=1
+   return dict(reply='Recap',complete=True,state=s.state())
+  with patch.object(c.Session,'answer',finish),patch.object(handler,'persist_session'):
+   handler.controlled_request(dict(session_id=sid,revision=0,answer=''),'de','it')
+  with patch.object(c.Session,'answer') as answer:
+   handler.controlled_request(dict(session_id=sid,revision=0,answer=''),'de','it')
+   answer.assert_not_called()
+  self.assertEqual(responses[0],responses[1]);self.assertEqual(handler.server.sessions[sid].model_calls,1)
+ def test_practice_retry_does_not_duplicate_revision_or_events(self):
+  original,sid,handler=self.fixture();original.complete=True;handler.path='/api/revise';responses=[];handler.send=lambda *args:responses.append(args)
+  def revise(s,*args):
+   s.practice_answers+=1;s.model_calls+=1
+   return dict(reply='Feedback',complete=True,state=s.state())
+  payload=dict(session_id=sid,revision=0,answer='Revised')
+  with patch.object(c.Session,'revise',revise),patch.object(handler,'persist_session'):
+   handler.controlled_request(payload,'de','it')
+  with patch.object(c.Session,'revise') as model:
+   handler.controlled_request(payload,'de','it');model.assert_not_called()
+  self.assertEqual(responses[0],responses[1]);saved=handler.server.sessions[sid]
+  self.assertEqual(saved.practice_answers,1);self.assertEqual(saved.practice_events,1)
+  with self.assertRaisesRegex(ValueError,'Session changed'):
+   handler.controlled_request({**payload,'answer':'Different revision'},'de','it')

@@ -1,8 +1,27 @@
 const $ = id => document.getElementById(id);
 let transcript = [], config, busy = false, complete = false, language = 'en', scenario = 'it', canContinue = true, suggestRecap = false;
-let canRevise = false;
+let canRevise = false, recapRetryable = true;
 let locales, sessionId = null, sessionRevision = 0, sessionState = null;
 const t = key => locales[language][key];
+// Storage is an optional convenience, including when accessing it throws.
+function readPreference(key) {
+  try { return localStorage.getItem(key); } catch (_) { return null; }
+}
+function writePreference(key, value) {
+  try { localStorage.setItem(key, value); } catch (_) { /* Practice works without storage. */ }
+}
+// Retry the exact request after a missing/unreadable response. The server replays
+// an already committed response instead of advancing or calling the model again.
+async function sessionRequest(path, payload) {
+  const options = {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)};
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let response, data;
+    try { response = await fetch(path, options); data = await response.json(); }
+    catch (error) { if (attempt === 0) continue; throw error; }
+    if (!response.ok) throw new Error(data.error);
+    return data;
+  }
+}
 // Optional voice adapters listen for these events; text practice needs no adapter.
 function cancelVoice() {
   window.dispatchEvent(new CustomEvent('coach:cancel', {detail:{session_id:sessionId}}));
@@ -19,7 +38,6 @@ window.addEventListener('coach:transcription', event => {
   cancelVoice(); $('answer').value=input.text; update(); $('answer').focus();
 });
 function translate() {
-  $('hybrid-config').hidden = language !== 'de' || config.provider === 'demo';
   document.documentElement.lang = language;
   document.title = t('title');
   document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
@@ -36,7 +54,7 @@ $('language').addEventListener('change', () => {
     $('language').value = language; return;
   }
   language = selected;
-  try { localStorage.setItem('interview-language', language); } catch (_) { /* Preference storage is optional. */ }
+  writePreference('interview-language', language);
   translate(); reset();
 });
 $('scenario').addEventListener('change', () => {
@@ -54,16 +72,17 @@ function bubble(role, content) {
 }
 async function reset() {
   cancelVoice();
-  canRevise = false; $('revision-form').hidden = true; $('revision-answer').value = '';
-  busy = true; sessionId = null; sessionRevision = 0;
+  $('practice-choice-form').hidden = true; $('practice-choice-status').textContent='';
+  recapRetryable = true; canRevise = false; $('revision-form').hidden = true; $('revision-answer').value = '';
+  busy = true; sessionId = null; sessionRevision = 0; sessionState = null;
   transcript = [{role: 'assistant', content: config.scenarios[scenario].translations[language].opening}]; complete = false; canContinue = true; suggestRecap = false;
   $('conversation').replaceChildren(); bubble('assistant', transcript[0].content);
   $('answer-form').hidden = false; $('finished').hidden = true; $('answer').value = ''; $('status').textContent = ''; $('answer-help').open = false; $('answer-hint').textContent = t('openingHint'); update();
   try {
-    const response = await fetch('/api/session/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language,scenario,experience:$("experience").value,difficulty:$("difficulty").value,previous_session_id:language === "de" ? localStorage.getItem("practice-last-"+scenario) : null})});
+    const response = await fetch('/api/session/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language,scenario,previous_session_id:readPreference("practice-last-"+language+"-"+scenario)})});
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
     sessionId = data.session_id; sessionState = data.state;
-    const prior = data.state.prior_learning_targets || []; $('prior-target').textContent = prior.length ? 'Aus deiner letzten Übung: ' + prior[prior.length-1].exercise : ''; $('prior-target').hidden = !prior.length; config.max_answers = data.max_answers;
+    const prior = data.state.prior_learning_targets || []; $('prior-target').textContent = prior.length ? t('priorPractice') + prior[prior.length-1].exercise : ''; $('prior-target').hidden = !prior.length; config.max_answers = data.max_answers;
     transcript = [{role:'assistant',content:data.opening}]; $('conversation').replaceChildren(); bubble('assistant',data.opening);
     publishVoice(data.speech);
   } catch(error) { $('status').textContent = t('error'); }
@@ -80,7 +99,7 @@ function update() {
   });
   $('answer-form').hidden = complete || !canContinue;
   $('recap').hidden = complete;
-  $('recap').disabled = busy || (answers === 0 && !$('answer').value.trim());
+  $('recap').disabled = busy || !sessionId || !recapRetryable || (answers === 0 && !$('answer').value.trim());
   $('recap').textContent = t($('answer').value.trim() ? 'sendRecap' : 'recap');
   $('recap-suggestion').hidden = complete || !suggestRecap;
   $('recap-suggestion').textContent = t(canContinue ? 'recapSuggested' : 'recapReady');
@@ -92,7 +111,7 @@ function update() {
   $('download').hidden = answers === 0;
   $('download').disabled = busy;
   $('conversation').setAttribute('aria-busy', String(busy));
-  $('send').disabled = busy || !$('answer').value.trim(); $('answer').disabled = busy; $('restart').disabled = busy; $('language').disabled = busy; $('scenario').disabled = busy; $('experience').disabled = busy || transcript.some(x => x.role === 'user'); $('difficulty').disabled = busy || transcript.some(x => x.role === 'user');
+  $('send').disabled = busy || !sessionId || !$('answer').value.trim(); $('answer').disabled = busy; $('restart').disabled = busy; $('language').disabled = busy; $('scenario').disabled = busy; $('choose-practice').disabled=busy; $('practice-choice').disabled=busy;
 }
 $('answer').addEventListener('input', update);
 async function submitToCoach(recap = false) {
@@ -103,13 +122,16 @@ async function submitToCoach(recap = false) {
   cancelVoice();
   busy = true; $('status').textContent = t(recap ? 'recapping' : 'thinking'); update();
   try {
-    const response = await fetch(recap ? '/api/recap' : '/api/answer', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({session_id:sessionId,revision:sessionRevision,answer,language,scenario})});
-    const data = await response.json(); if (!response.ok) throw new Error(data.error);
+    const data = await sessionRequest(recap ? '/api/recap' : '/api/answer', {session_id:sessionId,revision:sessionRevision,answer,language,scenario});
     transcript = [...pending, {role: 'assistant', content: data.reply}]; if (answer) bubble('user', answer); bubble('assistant', data.reply);
     $('answer').value = ''; $('answer-hint').textContent = data.hint || t('genericHint');
-    sessionRevision = data.state.answers + (data.state.practice_answers || 0); sessionState = data.state;
+    sessionRevision = data.state.revision ?? (data.state.answers + (data.state.practice_answers || 0)); sessionState = data.state;
     canRevise = data.can_revise === true; $('revision-form').hidden = !canRevise;
-    if (data.complete && language === 'de') localStorage.setItem('practice-last-'+scenario,sessionId);
+    const choices=data.optional_practice_choices || []; $('practice-choice').replaceChildren();
+    for (const choice of choices) {const option=document.createElement('option');option.value=choice.target_id;option.textContent=choice.label;$('practice-choice').append(option);}
+    $('practice-choice-form').hidden = !choices.length;
+    if (data.complete) writePreference('practice-last-'+language+'-'+scenario,sessionId);
+    recapRetryable = data.recap_retryable !== false;
     complete = data.complete; canContinue = data.can_continue; suggestRecap = data.suggest_recap;
     publishVoice(data.speech);
     $('finished').hidden = !complete; $('status').textContent = '';
@@ -121,19 +143,27 @@ async function submitToCoach(recap = false) {
     if (!$('status').textContent) $('conversation').lastElementChild.scrollIntoView({block: 'start', behavior: 'instant'});
   }
 }
+$('practice-choice-form').addEventListener('submit', async event => {
+  event.preventDefault(); if (busy || !complete) return;
+  cancelVoice(); busy=true; update(); $('choose-practice').disabled=true; $('practice-choice-status').textContent='Deine freiwillige Übung wird vorbereitet …';
+  try {
+    const data=await sessionRequest('/api/practice/select',{session_id:sessionId,revision:sessionRevision,target_id:$('practice-choice').value,language,scenario});
+    sessionState=data.state; sessionRevision=data.state.revision ?? (data.state.answers+data.state.practice_answers);bubble('assistant',data.reply); transcript.push({role:'assistant',content:data.reply});canRevise=data.can_revise===true;$('revision-form').hidden=!canRevise;
+    $('practice-choice-status').textContent=canRevise?t('practiceReady'):t('practiceUnavailable');publishVoice(data.speech);
+  } catch(error) {$('practice-choice-status').textContent=t('practiceError');}
+  finally {busy=false;$('choose-practice').disabled=false;update();}
+});
 $('revision-form').addEventListener('submit', async event => {
   event.preventDefault(); if (busy || !canRevise) return;
   const answer = $('revision-answer').value.trim(); if (!answer) return;
-  cancelVoice(); busy=true; update(); $('revision-answer').disabled=true; $('revise').disabled=true; $('revision-status').textContent='Wir schauen auf deinen Lernschritt …';
+  cancelVoice(); busy=true; update(); $('revision-answer').disabled=true; $('revise').disabled=true; $('revision-status').textContent=t('revisionWorking');
   try {
-    const response=await fetch('/api/revise',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,revision:sessionRevision,answer,language,scenario})});
-    const data=await response.json(); if (!response.ok) throw new Error(data.error);
+    const data=await sessionRequest('/api/revise',{session_id:sessionId,revision:sessionRevision,answer,language,scenario});
     bubble('user',answer); bubble('assistant',data.reply); transcript.push({role:'user',content:answer},{role:'assistant',content:data.reply});
-    sessionRevision=data.state.answers+data.state.practice_answers; $('revision-answer').value=''; $('revision-status').textContent='Deine Überarbeitung wurde gespeichert.'; publishVoice(data.speech);
-  } catch(error) { $('revision-status').textContent='Das hat gerade nicht geklappt. Deine Antwort bleibt hier; versuche es erneut.'; }
+    sessionState=data.state; sessionRevision=data.state.revision ?? (data.state.answers+data.state.practice_answers); $('revision-answer').value=''; $('revision-status').textContent=t('revisionSaved'); publishVoice(data.speech);
+  } catch(error) { $('revision-status').textContent=t('revisionError'); }
   finally {busy=false; $('revision-answer').disabled=false; $('revise').disabled=false; update();}
 });
-for (const id of ['experience','difficulty']) $(id).addEventListener('change', () => reset());
 $('answer-form').addEventListener('submit', event => { event.preventDefault(); submitToCoach(false); });
 $('recap').addEventListener('click', () => submitToCoach(true));
 $('restart').addEventListener('click', () => { if ((transcript.length > 1 || $('answer').value.trim()) && !confirm(t('restartConfirm'))) return; reset(); $('answer').focus(); });
@@ -147,7 +177,7 @@ fetch('/api/config').then(r => { if (!r.ok) throw new Error(); return r.json(); 
     const option = document.createElement('option'); option.value = id; option.textContent = item.translations.en.label; $('scenario').append(option);
   }
   $('scenario').value = scenario;
-  try { const saved = localStorage.getItem('interview-language'); if (Object.hasOwn(locales, saved)) language = saved; } catch (_) { /* Storage may be unavailable. */ }
+  const saved = readPreference('interview-language'); if (Object.hasOwn(locales, saved)) language = saved;
   $('language').value = language;
   $('demo-note').hidden = data.provider !== 'demo'; translate(); reset();
 }).catch(() => { $('status').textContent = 'Cannot connect / Keine Verbindung / Connexion impossible / Connessione non riuscita. ↻'; $('send').disabled = true; $('restart').disabled = true; });

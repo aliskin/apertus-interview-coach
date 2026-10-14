@@ -1,5 +1,6 @@
 """Dependency-free browser interface for short interview practice."""
 import argparse
+import hashlib
 import re
 import json
 import os
@@ -146,7 +147,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send(200, (STATIC / name).read_bytes(), mime)
 
     def do_POST(self):
-        if self.path not in ('/api/answer', '/api/recap', '/api/session/start', '/api/revise'):
+        if self.path not in ('/api/answer', '/api/recap', '/api/session/start', '/api/revise', '/api/practice/select'):
             return self.send(404, {'error': 'Not found'})
         # Same-origin requests only; the API never accepts credentials or endpoint URLs.
         if self.headers.get('Origin') not in (None, 'http://' + self.headers.get('Host', '')):
@@ -195,7 +196,7 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == '/api/session/start':
                 posting_id = {'it':'P-11','retail':'P-06','hospitality':'P-13','technical':'P-01','first-job':'P-03'}[scenario]
                 ids=['Q-01-01','Q-02-01','Q-03-01','Q-03-04','Q-04-04','Q-05-01','Q-05-03','Q-06-01','Q-07-01','Q-SIT-02','Q-08-02','Q-09-01','Q-10-01']
-                session=interview_controller.Session(language,interview_controller.POSTINGS[posting_id],interview_controller.make_plan(ids),pipeline=getattr(self.server,'pipeline','auto'),experience=payload.get('experience','first_interview'),difficulty=payload.get('difficulty','standard'))
+                session=interview_controller.Session(language,interview_controller.POSTINGS[posting_id],interview_controller.make_plan(ids),pipeline=getattr(self.server,'pipeline','auto'))
                 session.provider=self.server.provider;session.model=self.server.model
                 previous=payload.get('previous_session_id')
                 if previous:
@@ -203,8 +204,8 @@ class Handler(BaseHTTPRequestHandler):
                     prior=self.server.sessions.get(previous)
                     saved=interview_controller.ROOT/'data/sessions'/f'{previous}.json'
                     if prior is None and saved.exists():prior=interview_controller.Session(**json.loads(saved.read_text()))
-                    if prior and prior.posting['id']==session.posting['id']:
-                        session.prior_learning_targets=[x for x in prior.practice_history if 'exercise' in x][-3:]
+                    if prior and prior.posting['id']==session.posting['id'] and prior.language==session.language:
+                        session.prior_learning_targets=[x for x in prior.practice_history if 'exercise' in x and 'revision' not in x][-3:]
                 opening=session.start();identifier=uuid.uuid4().hex
                 self.persist_session(identifier,session)
                 self.server.sessions[identifier]=session
@@ -215,14 +216,25 @@ class Handler(BaseHTTPRequestHandler):
             original=self.server.sessions.get(identifier)
             if original is None:raise ValueError('Session not found. Start a new session.')
             if original.language!=language:raise ValueError('Session language cannot change.')
-            if payload.get('revision')!=original.answers+original.practice_answers:raise ValueError('Session changed. Reload before submitting again.')
-            if original.complete and self.path!='/api/revise':raise ValueError('Session is complete. Start a new session.')
+            request_hash=hashlib.sha256(json.dumps({'path':self.path,'payload':payload,'language':language,'scenario':scenario},sort_keys=True).encode()).hexdigest()
+            cached=original.last_web_request
+            if cached and cached['hash']==request_hash:
+                return self.send(200,cached['response'])
+            if payload.get('revision')!=original.state()['revision']:raise ValueError('Session changed. Reload before submitting again.')
+            if original.complete and self.path not in ('/api/revise','/api/practice/select'):raise ValueError('Session is complete. Start a new session.')
             session=copy.deepcopy(original)
-            if self.path=='/api/revise':
-                try:result=session.revise(payload.get('answer',''))
+            if self.path in ('/api/revise','/api/practice/select'):
+                try:
+                    if self.path=='/api/revise':result=session.revise(payload.get('answer',''))
+                    else:
+                        if not session.is_hybrid():raise ValueError('Optional practice requires the hybrid pipeline.')
+                        import hybrid
+                        result=hybrid.choose_practice(session,payload.get('target_id'))
                 except (ValueError,KeyError,TypeError,RuntimeError,OSError):
                     self.retain_spent_calls(identifier,original,session);raise
-                result['speech']=voice.speech_output(result['reply'],language,identifier,session.answers+session.practice_answers,'feedback')
+                session.practice_events+=1;result['state']=session.state()
+                result['speech']=voice.speech_output(result['reply'],language,identifier,session.state()['revision'],'feedback')
+                session.last_web_request={'hash':request_hash,'response':result}
                 self.commit_session(identifier,original,session)
                 return self.send(200,result)
             if self.server.provider=='demo':
@@ -244,8 +256,9 @@ class Handler(BaseHTTPRequestHandler):
                     # Roll back dialogue, but retain spent requests for accurate retry accounting.
                     self.retain_spent_calls(identifier,original,session)
                     raise
-            result['speech']=voice.speech_output(result['reply'],language,identifier,session.answers,
-                                                'feedback' if session.complete else 'interview')
+            result['speech']=voice.speech_output(result['reply'],language,identifier,session.state()['revision'],
+                                                'feedback' if session.complete or session.roleplay_finished else 'interview')
+            session.last_web_request={'hash':request_hash,'response':result}
             self.commit_session(identifier,original,session)
             return self.send(200,result)
 
