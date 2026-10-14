@@ -5,8 +5,8 @@ async function runBrowserSessionTests(source) {
   async function boot({denyRead=false, denyWrite=false, mode='success', startFails=false}={}) {
     const elements = new Map(), calls = [];
     function element() {
-      return {value:'', textContent:'', hidden:false, disabled:false, children:[], options:[],
-        addEventListener(){}, setAttribute(){}, removeAttribute(){}, focus(){}, scrollIntoView(){},
+      return {value:'', textContent:'', hidden:false, disabled:false, children:[], options:[], listeners:{}, submissions:0,
+        addEventListener(type,handler){this.listeners[type]=handler;}, requestSubmit(){this.submissions++;}, setAttribute(){}, removeAttribute(){}, focus(){}, scrollIntoView(){},
         append(...items){this.children.push(...items);this.options.push(...items);this.lastElementChild=items.at(-1);},
         replaceChildren(){this.children=[];this.options=[];}, lastElementChild:{scrollIntoView(){}}};
     }
@@ -17,8 +17,8 @@ async function runBrowserSessionTests(source) {
         return elements.get(id);
       }};
     const config = {provider:'apertus', max_answers:26,
-      locales:{en:new Proxy({}, {get:(_,key)=>String(key)})},
-      scenarios:{it:{translations:{en:{opening:'Opening',label:'IT'}}}}};
+      locales:{en:new Proxy({}, {get:(_,key)=>String(key)}),de:new Proxy({}, {get:(_,key)=>String(key)})},
+      scenarios:{it:{translations:{en:{opening:'Opening',label:'IT'},de:{opening:'Einstieg',label:'Informatik'}}}}};
     const state = {revision:1, answers:1, current_stage:'feedback', prior_learning_targets:[]};
     const result = {reply:'Recap', complete:true, can_continue:false, state, optional_practice_choices:[]};
     let attempts=0;
@@ -50,7 +50,8 @@ async function runBrowserSessionTests(source) {
   {
     const {api,calls}=await boot({denyRead:true});
     assert(api.state().sessionId, 'Denied storage must not block startup');
-    assert(calls.some(x=>x.path==='/api/session/start'), 'Start request missing');tests++;
+    assert(calls.some(x=>x.path==='/api/session/start'), 'Start request missing');
+    assert(JSON.parse(calls.find(x=>x.path==='/api/session/start').body).language==='de', 'New sessions should default to German');tests++;
   }
   {
     const {api,elements,calls}=await boot({denyWrite:true});
@@ -88,6 +89,21 @@ async function runBrowserSessionTests(source) {
     const {api,elements}=await boot({mode:'recap-exhausted'});
     elements.get('answer').value='My final answer';await api.submitToCoach();
     assert(!api.state().complete && elements.get('recap').disabled && !elements.get('restart').disabled, 'Exhausted recap should offer restart without false completion');tests++;
+  }
+  for (const [inputId,formId] of [['answer','answer-form'],['revision-answer','revision-form']]) {
+    const {elements}=await boot();const input=elements.get(inputId), form=elements.get(formId);
+    input.value='An answer';form.hidden=false;
+    const key=(extra={})=>({key:'Enter',ctrlKey:false,metaKey:false,isComposing:false,repeat:false,preventDefault(){},...extra});
+    input.listeners.keydown(key());assert(form.submissions===0,'Plain Enter must keep a newline');
+    input.listeners.keydown(key({ctrlKey:true}));
+    input.listeners.keydown(key({metaKey:true}));
+    assert(form.submissions===2,'Ctrl/Command+Enter must submit the correct form');
+    input.listeners.keydown(key({ctrlKey:true,isComposing:true}));
+    input.listeners.keydown(key({metaKey:true,repeat:true}));
+    input.value=' ';input.listeners.keydown(key({ctrlKey:true}));
+    input.value='Answer';form.hidden=true;input.listeners.keydown(key({ctrlKey:true}));
+    form.hidden=false;input.disabled=true;input.listeners.keydown(key({metaKey:true}));
+    assert(form.submissions===2,'Composition, repeats, blank, hidden or disabled input must not submit');tests++;
   }
   return tests;
 }

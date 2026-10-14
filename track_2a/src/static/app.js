@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-let transcript = [], config, busy = false, complete = false, language = 'en', scenario = 'it', canContinue = true, suggestRecap = false;
+let transcript = [], config, busy = false, complete = false, language = 'de', scenario = 'it', canContinue = true, suggestRecap = false;
 let canRevise = false, recapRetryable = true;
 let locales, sessionId = null, sessionRevision = 0, sessionState = null;
 const t = key => locales[language][key];
@@ -82,7 +82,7 @@ async function reset() {
     const response = await fetch('/api/session/start', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({language,scenario,previous_session_id:readPreference("practice-last-"+language+"-"+scenario)})});
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
     sessionId = data.session_id; sessionState = data.state;
-    const prior = data.state.prior_learning_targets || []; $('prior-target').textContent = prior.length ? t('priorPractice') + prior[prior.length-1].exercise : ''; $('prior-target').hidden = !prior.length; config.max_answers = data.max_answers;
+    config.max_answers = data.max_answers;
     transcript = [{role:'assistant',content:data.opening}]; $('conversation').replaceChildren(); bubble('assistant',data.opening);
     publishVoice(data.speech);
   } catch(error) { $('status').textContent = t('error'); }
@@ -150,6 +150,7 @@ $('practice-choice-form').addEventListener('submit', async event => {
     const data=await sessionRequest('/api/practice/select',{session_id:sessionId,revision:sessionRevision,target_id:$('practice-choice').value,language,scenario});
     sessionState=data.state; sessionRevision=data.state.revision ?? (data.state.answers+data.state.practice_answers);bubble('assistant',data.reply); transcript.push({role:'assistant',content:data.reply});canRevise=data.can_revise===true;$('revision-form').hidden=!canRevise;
     $('practice-choice-status').textContent=canRevise?t('practiceReady'):t('practiceUnavailable');publishVoice(data.speech);
+    if (canRevise) { $('revision-answer').focus({preventScroll:true}); $('revision-form').scrollIntoView({block:'nearest',behavior:'instant'}); }
   } catch(error) {$('practice-choice-status').textContent=t('practiceError');}
   finally {busy=false;$('choose-practice').disabled=false;update();}
 });
@@ -165,6 +166,18 @@ $('revision-form').addEventListener('submit', async event => {
   finally {busy=false; $('revision-answer').disabled=false; $('revise').disabled=false; update();}
 });
 $('answer-form').addEventListener('submit', event => { event.preventDefault(); submitToCoach(false); });
+function bindSendShortcut(inputId, formId) {
+  const input = $(inputId), form = $(formId);
+  input.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey) || event.isComposing) return;
+    event.preventDefault();
+    if (busy || event.repeat || input.disabled || form.hidden || !input.value.trim()) return;
+    form.requestSubmit();
+  });
+}
+bindSendShortcut('answer', 'answer-form');
+bindSendShortcut('revision-answer', 'revision-form');
+
 $('recap').addEventListener('click', () => submitToCoach(true));
 $('restart').addEventListener('click', () => { if ((transcript.length > 1 || $('answer').value.trim()) && !confirm(t('restartConfirm'))) return; reset(); $('answer').focus(); });
 $('download').addEventListener('click', () => {

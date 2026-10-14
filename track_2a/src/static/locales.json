@@ -78,7 +78,6 @@
     "stage_candidate_questions": "Your questions",
     "stage_closing": "Closing",
     "stage_feedback": "Feedback",
-    "priorPractice": "From your last practice: ",
     "optionalPractice": "Optional practice",
     "optionalPracticeHelp": "Choose a topic yourself. This is not an identified weakness.",
     "choosePractice": "Practise this topic",
@@ -90,7 +89,8 @@
     "practiceError": "That did not work. Please try again.",
     "revisionWorking": "Looking at your learning step…",
     "revisionSaved": "Your revised answer has been saved.",
-    "revisionError": "That did not work. Your answer is still here; please try again."
+    "revisionError": "That did not work. Your answer is still here; please try again.",
+    "sendShortcut": "Send: Ctrl+Enter or ⌘+Enter"
   },
   "de": {
     "title": "First Step · Bewerbungsgespräch üben",
@@ -171,7 +171,6 @@
     "stage_candidate_questions": "Deine Fragen",
     "stage_closing": "Abschluss",
     "stage_feedback": "Feedback",
-    "priorPractice": "Aus deiner letzten Übung: ",
     "optionalPractice": "Freiwillig weiterüben",
     "optionalPracticeHelp": "Wähle selbst ein Thema. Das ist keine festgestellte Schwäche.",
     "choosePractice": "Dieses Thema üben",
@@ -183,7 +182,8 @@
     "practiceError": "Das hat gerade nicht geklappt. Versuche es erneut.",
     "revisionWorking": "Wir schauen auf deinen Lernschritt …",
     "revisionSaved": "Deine Überarbeitung wurde gespeichert.",
-    "revisionError": "Das hat gerade nicht geklappt. Deine Antwort bleibt hier; versuche es erneut."
+    "revisionError": "Das hat gerade nicht geklappt. Deine Antwort bleibt hier; versuche es erneut.",
+    "sendShortcut": "Senden: Strg+Enter oder ⌘+Enter"
   },
   "fr": {
     "title": "First Step · Préparer un entretien",
@@ -264,7 +264,6 @@
     "stage_candidate_questions": "Tes questions",
     "stage_closing": "Conclusion",
     "stage_feedback": "Feedback",
-    "priorPractice": "Lors de ton dernier entraînement : ",
     "optionalPractice": "Continuer si tu le souhaites",
     "optionalPracticeHelp": "Choisis toi-même un thème. Ce n’est pas une faiblesse constatée.",
     "choosePractice": "Travailler ce thème",
@@ -276,7 +275,8 @@
     "practiceError": "Cela n’a pas fonctionné. Réessaie.",
     "revisionWorking": "Nous regardons ton progrès…",
     "revisionSaved": "Ta réponse retravaillée a été enregistrée.",
-    "revisionError": "Cela n’a pas fonctionné. Ta réponse reste ici ; réessaie."
+    "revisionError": "Cela n’a pas fonctionné. Ta réponse reste ici ; réessaie.",
+    "sendShortcut": "Envoyer : Ctrl+Entrée ou ⌘+Entrée"
   },
   "it": {
     "title": "First Step · Preparati al colloquio",
@@ -357,7 +357,6 @@
     "stage_candidate_questions": "Le tue domande",
     "stage_closing": "Conclusione",
     "stage_feedback": "Feedback",
-    "priorPractice": "Dalla tua ultima esercitazione: ",
     "optionalPractice": "Continuare se vuoi",
     "optionalPracticeHelp": "Scegli tu un tema. Non è una debolezza rilevata.",
     "choosePractice": "Esercitati su questo tema",
@@ -369,6 +368,7 @@
     "practiceError": "Non ha funzionato. Riprova.",
     "revisionWorking": "Stiamo guardando il tuo progresso…",
     "revisionSaved": "La tua risposta rivista è stata salvata.",
-    "revisionError": "Non ha funzionato. La tua risposta rimane qui; riprova."
+    "revisionError": "Non ha funzionato. La tua risposta rimane qui; riprova.",
+    "sendShortcut": "Invia: Ctrl+Invio o ⌘+Invio"
   }
 }

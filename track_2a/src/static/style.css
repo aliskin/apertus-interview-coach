@@ -21,3 +21,20 @@ main{align-items:start;gap:48px;margin-top:36px}.practice{align-self:start}.eyeb
 #revision-form{margin:20px 0;padding:16px;border:1px solid var(--line,#d9ded9);border-radius:12px}#revision-form textarea{width:100%;box-sizing:border-box}#revision-form button{margin-top:12px}
 
 #practice-choice-form{margin:20px 0;padding:16px;border:1px solid var(--line,#d9ded9);border-radius:12px}#practice-choice-form label{display:block;margin-bottom:8px}#practice-choice-form select{max-width:100%;padding:10px 36px 10px 12px}#practice-choice-form button{margin-top:12px}
+
+/* Keep the active exercise and its answer field together inside the chat. */
+.conversation-panel{margin:20px 0 24px;padding:20px;border:1px solid #b9cbbd;border-radius:18px;background:#f1f6f0;box-shadow:inset 0 3px 0 #52765e}
+#conversation-heading{margin:0 0 18px;font-size:13px;font-weight:750;letter-spacing:.04em;color:#365943}
+.conversation-panel .message.assistant{background:#fffefa;border-color:#cbd8c9;box-shadow:0 3px 10px #203e3608;margin-right:20px}
+.conversation-panel .message.user{background:#dfeade;border-color:#c3d3bf;margin-left:40px}
+.conversation-panel #answer-form,.conversation-panel #revision-form{margin:20px 0 0;padding:16px 0 0;border:0;border-top:1px solid #c6d6c5;border-radius:0}
+.conversation-panel form>label{margin:0 0 10px}
+#revision-help{font-size:13px;line-height:1.6;color:#526451;margin:10px 0 0}
+#practice-choice-form{display:flex;flex-direction:column;align-items:stretch;gap:12px;background:#fafbf7}
+#practice-choice-form label,#practice-choice-form p{margin:0;line-height:1.6}
+#practice-choice-form select{width:100%;min-height:46px;border:1px solid #bdcdbb;border-radius:10px;background:#fffefa;color:#203e36;font:inherit;font-size:14px;padding:10px 38px 10px 12px}
+#practice-choice-form button{align-self:flex-start;margin:0}
+#practice-choice-form select:focus-visible{outline:3px solid #94aa76;outline-offset:3px}
+@media(max-width:600px){.conversation-panel{padding:14px;margin-left:-6px;margin-right:-6px}.conversation-panel .message.assistant{margin-right:0}.conversation-panel .message.user{margin-left:18px}#practice-choice-form button{width:100%}}
+
+.shortcut-hint{margin:10px 0 0;font-size:12px;line-height:1.5;color:#526451}
