@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interview Coach · Manual review</title>
+  <link rel="stylesheet" href="/manual-review.css">
+  <script src="/manual-review.js" defer></script>
+</head>
+<body>
+  <header class="masthead"><div><span class="eyebrow">INTERVIEW COACH / QUALITY REVIEW</span><h1>A closer look at the feedback.</h1><p>Review the coach, not the candidate. Your labels stay on this computer.</p></div><a id="export-labels" class="button secondary" href="/api/export" download>Export saved labels</a></header>
+  <main>
+    <aside class="sidebar" aria-label="Coach versions and examples"><h2>Coach versions</h2><nav id="versions" aria-label="Choose a coach version"></nav><div class="sidebar-title"><h2>Interviews / examples</h2><span id="progress">Loading…</span></div><progress id="progress-bar" value="0" max="10" aria-label="Saved examples"></progress><nav id="examples" aria-label="Choose an example"></nav><p class="small" id="sample-info"></p><p class="small">A filled circle means saved. You can revisit and update any example.</p></aside>
+    <div id="workspace" hidden>
+      <section id="version-summary" class="reading version-summary" aria-label="Version review summary"><span class="eyebrow">SAVED REVIEW FINDINGS</span><h2 id="version-title"></h2><div id="summary-stats" class="summary-stats"></div><div id="summary-categories" class="summary-categories"></div><p class="small">Counts are guideline violations across saved reviews, not candidate scores. Draft labels await validation; “Not sure” and “Not applicable” are counted separately.</p></section>
+      <nav class="section-nav" aria-label="Navigate between interview and review"><a href="#version-summary">Summary</a><a href="#interview">Interview</a><a href="#review">Review &amp; labels</a></nav>
+      <div class="case-heading"><div><span class="eyebrow" id="case-number"></span><h2 id="case-id"></h2><p id="case-meta"></p></div><span class="save-badge" id="case-state">Not saved</span></div>
+      <section class="reading case-summary" aria-label="Current example review summary"><h3>Review at a glance</h3><div id="case-findings"></div><p id="case-review-notes"></p></section>
+      <section class="reading stage-panel" aria-label="Interview stage">
+        <label for="interview-stage">Interview stage<select id="interview-stage"></select></label>
+        <label for="stage-reason">Why this stage?<textarea id="stage-reason" rows="2" placeholder="Classify the question and candidate answer, not the coach's next question."></textarea></label>
+        <label class="translation-flag"><input id="validated" type="checkbox"> I have validated these labels <span>(leave unchecked for drafts)</span></label>
+        <p class="small">Session-level requirements cannot always be judged from one answer. Use “Not applicable” and explain: “Not applicable: cannot assess from this excerpt” when the stage or missing context prevents assessment.</p>
+      </section>
+      <section id="interview" class="reading" aria-label="Interview and coach response">
+        <div class="reading-header"><h3>Read the interview</h3><div class="fold-actions"><button id="toggle-originals" type="button" class="button secondary">Collapse originals</button><button id="toggle-translations" type="button" class="button secondary">Expand translations</button></div></div>
+        <p class="translation-notice">English is a reading aid. Judge wording, tone, and language using the original. Translations are AI-assisted and have not been independently verified.</p>
+        <p class="small" id="original-language">Original</p><p class="small">Highlighted passages are review evidence. Select a highlight to jump to its guideline; use “Show evidence” in the review to return here.</p>
+        <div id="exchange"></div>
+        <label class="translation-flag"><input id="translation-issue" type="checkbox"> I noticed a translation issue <span>(describe it in the overall notes)</span></label>
+      </section>
+      <section id="review" class="labels" aria-labelledby="guidelines-heading">
+        <div class="label-heading"><div><h3 id="guidelines-heading">Label the feedback guidelines</h3><p>Use “Not applicable” when a rule has no relevant trigger. Use “Not sure” when you cannot decide.</p></div><button id="unsure-rest" class="button secondary" type="button">Not sure for remaining</button></div>
+        <p class="small">Assess local wording and evidence; do not require full-session feedback in small talk. Do not infer unobserved behaviour. Explain each label in its note; use original quotes for evidence.</p>
+        <p id="label-progress" class="label-progress"></p>
+        <div id="guidelines"></div>
+        <label class="overall-notes" for="overall-notes">Overall notes<textarea id="overall-notes" rows="3" placeholder="What worked? What should change? Any translation concerns?"></textarea></label>
+      </section>
+      <div class="save-bar"><div><p id="save-message" role="status" aria-live="polite">Labels are saved only when you click Save.</p><span class="small" id="remaining"></span></div><div class="save-actions"><button id="previous" class="button secondary" type="button">Previous</button><button id="save" class="button primary" type="button">Save example</button><button id="save-next" class="button primary" type="button">Save & next</button></div></div>
+    </div>
+    <p id="load-error" role="alert"></p>
+  </main>
+</body>
+</html>
