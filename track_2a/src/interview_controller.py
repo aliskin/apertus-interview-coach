@@ -127,6 +127,23 @@ def approved_question_variants(question,language):
         variants=QUESTION_VARIANTS_DE.get(question['id'],[])
     return list(dict.fromkeys([question_text(question,language)]+variants))
 
+def remove_embedded_question(acknowledgement, questions):
+    """Keep the reaction, but let code ask the selected question exactly once.
+
+    Match complete word sequences, ignoring case and punctuation. Imperative
+    questions need this too: a question-mark filter cannot detect them.
+    This deliberately does not infer arbitrary semantic paraphrases.
+    """
+    normal=lambda text:' '.join(re.findall(r'\w+',text.casefold()))
+    patterns=set()
+    for question in questions:
+        for part in [question,*re.split(r'(?<=[.!?])\s+',question)]:
+            phrase=normal(part)
+            if len(phrase.split())>=3:patterns.add(' '+phrase+' ')
+    return ' '.join(sentence for sentence in re.split(r'(?<=[.!?])\s+',acknowledgement.strip())
+                    if not any(phrase in ' '+normal(sentence)+' ' for phrase in patterns))
+
+
 def question_spans(text):
     # Whole stored questions preserve abbreviations; spans recover older replies with acknowledgements.
     return list(dict.fromkeys([text.strip()]+[q.strip() for q in re.findall(r'[^.!?\n]*\?',text) if q.strip()]))
@@ -329,6 +346,12 @@ class Session:
         packet={'acknowledgement':acknowledgement,'question':question,'followup':action=='follow_up'}
         if action not in ('answer_company','support_advance'):
             packet['acknowledgement']=' '.join(x for x in re.split(r'(?<=[.!?])\s+',acknowledgement) if '?' not in x)
+        forms=[packet['question']]
+        if next_q and not packet['followup']:forms+=approved_question_variants(next_q,self.language)
+        clean=remove_embedded_question(packet['acknowledgement'],forms)
+        if clean!=packet['acknowledgement']:
+            self.validation_warnings.append({'question_id':current['id'],'action':'embedded_question_removed'})
+        packet['acknowledgement']=clean
         if packet['followup'] and next_q:
             self.current_followups+=1;self.followup_count+=1
         else:
