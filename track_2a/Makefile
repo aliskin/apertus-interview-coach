@@ -1,10 +1,12 @@
 COACH_PROVIDER ?= apertus
+PYTHON ?= python3
+REVIEW_PORT ?= 8081
 COACH_MODEL ?= llama3:8b
 MAX_ANSWERS ?= 12
 PROFILE ?=
 export COACH_PROVIDER COACH_MODEL PROFILE MAX_ANSWERS
 
-.PHONY: run web web-demo review test
+.PHONY: run web web-demo review review-demo test
 
 run: web
 
@@ -15,7 +17,11 @@ web-demo:
 	@COACH_PROVIDER=demo sh src/run.sh
 
 review:
-	python3 src/experiments/manual_review.py
+	$(PYTHON) src/review/portal.py --port $(REVIEW_PORT)
+
+review-demo:
+	$(PYTHON) src/review/prepare.py --demo
+	$(PYTHON) src/review/portal.py --port $(REVIEW_PORT)
 
 test:
-	python -m unittest discover -s src/tests -v
+	$(PYTHON) -m unittest discover -s src/tests -v

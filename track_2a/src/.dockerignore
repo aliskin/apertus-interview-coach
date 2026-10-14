@@ -19,6 +19,12 @@
 !static/*.css
 !static/*.js
 !static/*.json
+!review/
+!review/*.py
+!review/static/
+!review/static/*.html
+!review/static/*.css
+!review/static/*.js
 !interview_data/
 !interview_data/*.json
 !interview_data/*.jsonl
