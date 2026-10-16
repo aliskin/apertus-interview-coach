@@ -1,0 +1,75 @@
+RECONSTRUCTED EVALUATION PROTOCOL — NOT THE ORIGINAL SAVED PROMPT
+
+Purpose and provenance
+This document reconstructs the interactive instructions used for qualitative
+assessment of complete interview-coach outputs. It was written after that
+assessment; it is not a verbatim record of one original prompt and was not
+used to regenerate the existing findings.
+
+The assessment model was GPT-6.1-Sol in the coding-assistant workflow, as
+identified by the project author. The saved label files do not independently
+record the model/version or a complete system-and-user prompt. The local
+label-writing scripts store assistant-authored observations and validate
+quotes; they do not invoke a separately configured GPT judge API.
+
+Relevant saved material (paths relative to track_2a/)
+- data/interview/feedback_guidelines.json: organiser feedback rules.
+- data/interview/criteria.json: candidate-assessment rubric, not a numerical
+  scorecard for coach quality.
+- data/manual_review/versions/interviews-v17/sample.json: evaluated outputs.
+- data/manual_review/versions/interviews-v17/labels.json: saved findings.
+- src/experiments/label_uniform_review.py and label_optional_review.py:
+  saved rule interpretations and case-specific observations.
+- data/runs/full-interviews-v17-optional-recap/evaluation/comparison.json:
+  programmatically calculated runtime/availability metrics.
+These generated/experimental resources remain local, outside the submission
+runtime and Git history. Their availability is not a promise of deterministic
+reproduction of model outputs.
+
+Reconstructed task instructions
+Evaluate the coach's behaviour over each complete interview, including the
+final recap. Use the organiser's constructive-feedback guidelines. Read the
+actual question, candidate answer, coach response and relevant preceding
+context before judging a passage. Use the complete interview as the evaluation
+unit: a greeting alone does not require all final-feedback behaviours.
+
+Check:
+1. Respectful, age-appropriate tone and understandable, concise language.
+2. Attention to the actual answer and coherent transitions between topics.
+3. Concrete feedback grounded in the candidate's visible statements.
+4. Unsupported praise, invented abilities/experiences or employer facts.
+5. Whether a follow-up addresses a real gap rather than a sufficient answer.
+6. Useful, proportionate next steps and explicit control over optional practice.
+7. Whether explanations and evidence actually support one another; a literal
+   quotation alone does not establish a correct interpretation.
+
+Distinguish these sources:
+- Candidate statements are evidence about what the candidate said, not proof
+  of independently observed competence.
+- Hypothetical scenario answers describe proposed actions, not past experience.
+- Only the supplied posting establishes company facts.
+- Coach explanations and ratings are outputs to assess, not ground truth.
+- Older comparison recaps and context-only material are not current coach
+  output and must not be cited as current evidence.
+
+For each applicable guideline, state whether it is met, violated or uncertain.
+Where it cannot be assessed, explain why rather than treating absence as a
+failure. Cite an exact coach-output passage for a claimed violation, and
+include the relevant question/candidate context in the reasoning. Do not infer
+voice, gestures or body language from text. Do not reward unnecessary advice
+or penalise an adequate small-talk answer for lacking a professional example.
+
+Summarise the main strengths and recurring weaknesses in plain language.
+Do not turn qualitative findings or candidate scores into an invented overall
+coach performance score. Keep GPT's interpretation separate from deterministic
+metrics such as request counts, completion and presence of practice choices.
+
+Scope of the report's numbers
+The 1,178-call workload combines recorded conversation and recap traces for
+416 candidate answers: 2.83 requests per answer, maximum session average 3.50.
+Some conversation outputs were retained while recaps were regenerated. These
+figures are not a newly generated end-to-end run of every subsequent code fix.
+Candidate simulation and supplementary translation/probe calls are outside
+this coach-workload aggregate. A returned recap can still have missing
+assessments. No calibrated quality score or repeated-run consistency metric
+was established by this procedure.
